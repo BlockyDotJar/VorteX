@@ -19,14 +19,13 @@ package dev.blocky.app.vx;
 
 import dev.blocky.app.vx.entities.NodeCreator;
 import dev.blocky.app.vx.updater.ApplicationUpdater;
-import dev.blocky.app.vx.windows.api.DwmAttribute;
-import dev.blocky.app.vx.windows.api.Win11Style;
+import dev.blocky.app.vx.windows.api.dwm.DWMAttribute;
+import dev.blocky.app.vx.windows.api.dwm.DWMHandler;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
@@ -44,6 +43,7 @@ import net.lingala.zip4j.model.enums.CompressionLevel;
 import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.controlsfx.control.HiddenSidesPane;
 
 import java.io.File;
@@ -57,8 +57,6 @@ import static dev.blocky.app.vx.handler.ArchiveExtractionHandler.initExtractArch
 import static dev.blocky.app.vx.handler.ArchiveOpeningHandler.initOpenArchive;
 import static dev.blocky.app.vx.handler.BarcodeCreationHandler.initCreateBarcode;
 import static dev.blocky.app.vx.handler.BarcodeReadingHandler.initReadBarcode;
-import static dev.blocky.app.vx.handler.DocumentConversionHandler.initConvertDocument;
-import static dev.blocky.app.vx.handler.PDFConversionHandler.initConvertPDF;
 
 public class VXApplication extends Application
 {
@@ -67,29 +65,36 @@ public class VXApplication extends Application
     @Override
     public void start(Stage stage) throws IOException
     {
+        NodeCreator creator = new NodeCreator();
+
         if (args.length > 1)
         {
+            String title = "Error while opening VorteX...";
+            String headerText =
+                    """
+                                You can't open more then one files a time.
+                                VorteX will now be closed...
+                            """;
+
+            Alert closeAlert = creator.createAlert(Alert.AlertType.ERROR, title, headerText, null);
+            closeAlert.showAndWait();
+
             System.exit(0);
             return;
         }
-
-        NodeCreator creator = new NodeCreator();
 
         HiddenSidesPane hiddenSidesPane = new HiddenSidesPane();
         hiddenSidesPane.setTriggerDistance(25);
 
         AnchorPane anchorPane = new AnchorPane();
-        anchorPane.getStyleClass().add("anchor-pane");
 
         TextArea detailArea = creator.createTextArea(null, 10, 415);
 
         Button createArchive = creator.createButton("Create Archive", 10, 10, 125, false);
         Button openArchive = creator.createButton("Open Archive", 140, 10, 125, false);
         Button extractArchive = creator.createButton("Extract Archive", 270, 10, 125, false);
-        Button convertDocument = creator.createButton("Convert Document", 10, 55, 150, false);
-        Button convertPDF = creator.createButton("Convert PDF", 165, 55, 115, false);
-        Button createBarcode = creator.createButton("Create Barcode", 10, 100, 125, false);
-        Button readBarcode = creator.createButton("Read Barcode", 140, 100, 125, false);
+        Button createBarcode = creator.createButton("Create Barcode", 10, 50, 125, false);
+        Button readBarcode = creator.createButton("Read Barcode", 140, 50, 125, false);
 
         if (args.length == 0)
         {
@@ -186,6 +191,26 @@ public class VXApplication extends Application
 
             if (!file.exists() || !file.isFile() || file.isDirectory() || !FilenameUtils.getExtension(file.getName()).equals("vxar"))
             {
+                String title = "Error while opening VorteX...";
+
+                String headerText = String.format(
+                        """
+                                    A weird error occurred on application start.
+                                    
+                                    Here are some parameter that can help you finding the issue:
+                                    > file.exists = %b
+                                    > file.isFile = %b
+                                    > file.isDirectory = %b
+                                    > file.isVorteXArchive = %b
+                                    
+                                    VorteX will be closed after button interaction...
+                                """,
+                        file.exists(), file.isFile(), file.isDirectory(), FilenameUtils.getExtension(file.getName()).equals("vxar")
+                );
+
+                Alert closeAlert = creator.createAlert(Alert.AlertType.ERROR, title, headerText, null);
+                closeAlert.showAndWait();
+
                 System.exit(0);
                 return;
             }
@@ -198,12 +223,12 @@ public class VXApplication extends Application
 
         Pane hiddenPane = new Pane();
         hiddenPane.getStyleClass().add("hidden-pane");
-        hiddenPane.setPrefHeight(140);
+        hiddenPane.setPrefHeight(90);
 
         hiddenPane.setOnMouseEntered(e -> hiddenSidesPane.setPinnedSide(Side.BOTTOM));
         hiddenPane.setOnMouseExited(e -> hiddenSidesPane.setPinnedSide(null));
 
-        hiddenPane.getChildren().addAll(createArchive, openArchive, extractArchive, convertDocument, convertPDF, createBarcode, readBarcode);
+        hiddenPane.getChildren().addAll(createArchive, openArchive, extractArchive, createBarcode, readBarcode);
 
         hiddenSidesPane.setBottom(hiddenPane);
 
@@ -212,11 +237,12 @@ public class VXApplication extends Application
         Scene scene = new Scene(hiddenSidesPane, 605, 525);
         scene.getStylesheets().add(getClass().getResource("/assets/ui/css/styles.css").toExternalForm());
         scene.setFill(Color.TRANSPARENT);
+
+        stage.setScene(scene);
         stage.initStyle(StageStyle.UNIFIED);
         stage.setTitle("VorteX");
         stage.getIcons().add(icon);
         stage.setResizable(false);
-        stage.setScene(scene);
         stage.show();
 
         HostServices hostServices = getHostServices();
@@ -224,8 +250,6 @@ public class VXApplication extends Application
         initCreateArchive(stage, anchorPane, detailArea, createArchive);
         initOpenArchive(anchorPane, detailArea, openArchive);
         initExtractArchive(stage, hostServices, anchorPane, detailArea, extractArchive);
-        initConvertDocument(stage, hostServices, anchorPane, detailArea, convertDocument);
-        initConvertPDF(stage, hostServices, anchorPane, detailArea, convertPDF);
         initCreateBarcode(stage, anchorPane, detailArea, createBarcode);
         initReadBarcode(stage, anchorPane, detailArea, readBarcode);
 
@@ -233,105 +257,88 @@ public class VXApplication extends Application
 
         Platform.runLater(() ->
         {
-            Win11Style.WindowHandle handle = Win11Style.findWindowHandle(stage);
-            Win11Style.dwmSetBooleanValue(handle, DwmAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, true);
+            String osName = System.getProperty("os.name");
+            String[] osParts = osName.split(" ");
 
-            if (!Win11Style.dwmSetIntValue(handle, DwmAttribute.DWMWA_SYSTEMBACKDROP_TYPE, DwmAttribute.DWMSBT_MAINWINDOW.value))
+            if (osParts.length >= 2 && StringUtils.isNumeric(osParts[1]) && Integer.parseInt(osParts[1]) == 11)
             {
-                Win11Style.dwmSetBooleanValue(handle, DwmAttribute.DWMWA_MICA_EFFECT, true);
-            }
+                DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle(stage);
+                DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, true);
 
-            ApplicationUpdater updater = new ApplicationUpdater();
-            List<String> versionDetails = updater.newVersion(detailArea);
-
-            if (!versionDetails.isEmpty())
-            {
-                String version = versionDetails.get(2);
-                String releaseLink = versionDetails.get(0);
-
-                AnchorPane alertPane = new AnchorPane();
-                alertPane.setMinSize(705, 435);
-                alertPane.setMaxSize(705, 435);
-
-                String text = "Version " + version + " is here! Do you want to install the newest version of VorteX?";
-
-                Label label = creator.createLabel(text, 4, 0);
-                Hyperlink hyperlink = creator.createHyperlink(hostServices, "Read here about the new version.", releaseLink, 0, 15);
-
-                WebView webView = creator.createWebView(20, 40);
-                WebEngine webEngine = webView.getEngine();
-                webEngine.load(releaseLink);
-
-                alertPane.getChildren().addAll(label, hyperlink, webView);
-
-                String title = "New VorteX version available!";
-                String headerText = "Looks like there is a new version of VorteX (" + version + ") available!";
-
-                Alert updateAlert = creator.createAlert(Alert.AlertType.CONFIRMATION, title, headerText, alertPane);
-
-                ButtonType downloadButton = new ButtonType("Download", ButtonBar.ButtonData.OK_DONE);
-                updateAlert.getButtonTypes().setAll(downloadButton, ButtonType.CANCEL);
-
-                webEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
+                if (!DWMHandler.dwmSetIntValue(handle, DWMAttribute.DWMWA_SYSTEMBACKDROP_TYPE, DWMAttribute.DWMSBT_MAINWINDOW.value))
                 {
-                    if (newValue == Worker.State.SCHEDULED)
-                    {
-                        webView.setVisible(false);
-                    }
-
-                    if (newValue == Worker.State.SUCCEEDED)
-                    {
-                        webEngine.executeScript(script);
-
-                        webView.setVisible(true);
-
-                        if (!updateAlert.isShowing())
-                        {
-                            updateAlert.showAndWait().ifPresent((bt) ->
-                            {
-                                if (bt.getButtonData() == ButtonBar.ButtonData.OK_DONE)
-                                {
-                                    final File[] installer = {null};
-
-                                    Task<Void> backgroundTask = new Task<>()
-                                    {
-                                        @Override
-                                        protected Void call()
-                                        {
-                                            installer[0] = updater.downloadAndInstallFile(detailArea, versionDetails);
-                                            return null;
-                                        }
-                                    };
-
-                                    backgroundTask.setOnSucceeded((e) ->
-                                            Platform.runLater(() ->
-                                            {
-                                                String closeTitle = "Successfully downloaded newest version!";
-                                                String closeHeaderText = "VorteX will now be closed, and the installation wizard will be opened.";
-
-                                                Alert closeAlert = creator.createAlert(Alert.AlertType.INFORMATION, closeTitle, closeHeaderText, null);
-
-                                                closeAlert.showAndWait();
-
-                                                hostServices.showDocument(installer[0].getAbsolutePath());
-
-                                                System.exit(0);
-                                            })
-                                    );
-
-                                    new Thread(backgroundTask).start();
-                                }
-                            });
-                        }
-                    }
-                });
+                    DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_MICA_EFFECT, true);
+                }
             }
+
+            new Thread(() ->
+            {
+                ApplicationUpdater updater = new ApplicationUpdater();
+                List<String> versionDetails = updater.newVersion(detailArea);
+
+                if (!versionDetails.isEmpty())
+                {
+                    String version = versionDetails.get(2);
+                    String releaseLink = versionDetails.get(0);
+
+                    AnchorPane alertPane = new AnchorPane();
+                    alertPane.setMinSize(705, 435);
+                    alertPane.setMaxSize(705, 435);
+
+                    String text = "Version " + version + " is here! Do you want to install the newest version of VorteX?";
+
+                    Label label = creator.createLabel(text, 4, 0);
+                    Hyperlink hyperlink = creator.createHyperlink(hostServices, "Read here about the new version.", releaseLink, 0, 15);
+
+                    WebView webView = creator.createWebView(20, 40);
+                    WebEngine webEngine = webView.getEngine();
+                    webEngine.load(releaseLink);
+
+                    alertPane.getChildren().addAll(label, hyperlink, webView);
+
+                    String title = "New VorteX version available!";
+                    String headerText = "Looks like there is a new version of VorteX (" + version + ") available!";
+
+                    Alert updateAlert = creator.createAlert(Alert.AlertType.CONFIRMATION, title, headerText, alertPane);
+
+                    ButtonType downloadButton = new ButtonType("Download", ButtonBar.ButtonData.OK_DONE);
+                    updateAlert.getButtonTypes().setAll(downloadButton, ButtonType.CANCEL);
+
+                    webEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
+                    {
+                        if (newValue == Worker.State.SCHEDULED)
+                        {
+                            webView.setVisible(false);
+                        }
+
+                        if (newValue == Worker.State.SUCCEEDED)
+                        {
+                            webEngine.executeScript(script);
+
+                            webView.setVisible(true);
+
+                            if (!updateAlert.isShowing())
+                            {
+                                updateAlert.showAndWait().ifPresent((bt) ->
+                                {
+                                    if (bt.getButtonData() == ButtonBar.ButtonData.OK_DONE)
+                                    {
+                                        updater.startDownloadTask(hostServices, creator, detailArea, versionDetails);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            }).start();
         });
     }
 
     public static void main(String[] args)
     {
         VXApplication.args = args;
+
+        System.setProperty("prism.forceUploadingPainter", "true");
 
         launch();
     }

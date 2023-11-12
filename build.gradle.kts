@@ -34,22 +34,14 @@ dependencies {
 
     api("net.lingala.zip4j:zip4j:2.11.5")
 
-    api("com.documents4j:documents4j-api:1.1.12")
-    api("com.documents4j:documents4j-local:1.1.12")
-    api("com.documents4j:documents4j-transformer-msoffice-word:1.1.12")
-    api("com.documents4j:documents4j-transformer-msoffice-powerpoint:1.1.12")
-
     api("com.google.zxing:core:3.5.2")
     api("com.google.zxing:javase:3.5.2")
 
-    api("org.controlsfx:controlsfx:11.1.2")
+    api("org.controlsfx:controlsfx:11.2.0")
 
     api("org.apache.commons:commons-lang3:3.13.0")
     api("commons-io:commons-io:2.15.0")
     api("commons-codec:commons-codec:1.16.0")
-
-    api("org.slf4j:slf4j-api:2.0.9")
-    api("ch.qos.logback:logback-classic:1.4.11")
 }
 
 java {
@@ -76,7 +68,7 @@ launch4j {
 
     version = project.version.toString()
     textVersion = project.version.toString()
-    copyright = "Copyright 2023 Dominic R. (aka. BlockyDotJar)"
+    copyright = "Copyright (C) 2023 BlockyDotJar (aka. Dominic R.)"
     downloadUrl = "https://www.oracle.com/java/technologies/downloads/#jdk17-windows"
 }
 

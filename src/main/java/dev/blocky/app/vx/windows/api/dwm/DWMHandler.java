@@ -1,4 +1,21 @@
-package dev.blocky.app.vx.windows.api;
+/**
+ * custom_window - A small collection of utility methods to customize a JavaFX stage.
+ * Copyright (C) 2022 M. Oguz Tas (mimoguz - https://github.com/mimoguz)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package dev.blocky.app.vx.windows.api.dwm;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
@@ -10,7 +27,7 @@ import com.sun.jna.platform.win32.WinNT;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-public class Win11Style
+public class DWMHandler
 {
     public static class WindowHandle
     {
@@ -35,7 +52,7 @@ public class Win11Style
                 );
     }
 
-    public static boolean dwmSetBooleanValue(WindowHandle handle, DwmAttribute attribute, boolean value)
+    public static boolean dwmSetBooleanValue(WindowHandle handle, DWMAttribute attribute, boolean value)
     {
         if (handle == null)
         {
@@ -54,7 +71,7 @@ public class Win11Style
                 );
     }
 
-    public static boolean dwmSetIntValue(WindowHandle handle, DwmAttribute attribute, int value)
+    public static boolean dwmSetIntValue(WindowHandle handle, DWMAttribute attribute, int value)
     {
         if (handle == null)
         {
@@ -87,17 +104,17 @@ public class Win11Style
 
     public static boolean setBorderColor(final WindowHandle handle, Color color)
     {
-        return dwmSetIntValue(handle, DwmAttribute.DWMWA_BORDER_COLOR, RGB(color));
+        return dwmSetIntValue(handle, DWMAttribute.DWMWA_BORDER_COLOR, RGB(color));
     }
 
     public static boolean setCaptionColor(final WindowHandle handle, final Color color)
     {
-        return dwmSetIntValue(handle, DwmAttribute.DWMWA_CAPTION_COLOR, RGB(color));
+        return dwmSetIntValue(handle, DWMAttribute.DWMWA_CAPTION_COLOR, RGB(color));
     }
 
     public static boolean setTextColor(final WindowHandle handle, final Color color)
     {
-        return dwmSetIntValue(handle, DwmAttribute.DWMWA_TEXT_COLOR, RGB(color));
+        return dwmSetIntValue(handle, DWMAttribute.DWMWA_TEXT_COLOR, RGB(color));
     }
 
     private static int floatingTo8Bit(final double n)

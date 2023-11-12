@@ -19,6 +19,11 @@ package dev.blocky.app.vx.updater;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
+import dev.blocky.app.vx.entities.NodeCreator;
+import javafx.application.HostServices;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.scene.control.Alert;
 import javafx.scene.control.TextArea;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -191,5 +196,38 @@ public class ApplicationUpdater
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
         }
         return file;
+    }
+
+    public void startDownloadTask(HostServices hostServices, NodeCreator creator, TextArea detailArea, List<String> versionDetails)
+    {
+        final File[] installer = {null};
+
+        Task<Void> backgroundTask = new Task<>()
+        {
+            @Override
+            protected Void call()
+            {
+                installer[0] = downloadAndInstallFile(detailArea, versionDetails);
+                return null;
+            }
+        };
+
+        backgroundTask.setOnSucceeded((e) ->
+                Platform.runLater(() ->
+                {
+                    String title = "Successfully downloaded newest version!";
+                    String headerText = "VorteX will now be closed, and the installation wizard will be opened.";
+
+                    Alert closeAlert = creator.createAlert(Alert.AlertType.INFORMATION, title, headerText, null);
+
+                    closeAlert.showAndWait();
+
+                    hostServices.showDocument(installer[0].getAbsolutePath());
+
+                    System.exit(0);
+                })
+        );
+
+        new Thread(backgroundTask).start();
     }
 }

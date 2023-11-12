@@ -1,5 +1,5 @@
-.anchor-pane {
-    -fx-background-color: #E6E6FA;
+.root {
+    -fx-background-color: transparent;
 }
 
 .button {
@@ -209,11 +209,12 @@
 .check-box {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-text-fill: #333;
+    -fx-text-fill: #C6C6C6;
 }
 
 .check-box .box {
     -fx-background-color: #ccc;
+    -fx-background-insets: 0;
     -fx-border-color: #000000;
     -fx-border-width: 1px;
 }
@@ -240,7 +241,7 @@
 
 .radio-button {
     -fx-font-size: 16px;
-    -fx-text-fill: #333;
+    -fx-text-fill: #C6C6C6;
     -fx-padding: 5px;
     -fx-background-radius: 0;
 }
@@ -248,9 +249,7 @@
 .radio-button .radio {
     -fx-background-color: white;
     -fx-background-radius: 50%;
-    -fx-padding: 2px;
-    -fx-scale-x: 1.2;
-    -fx-scale-y: 1.2;
+    -fx-background-insets: 0;
     -fx-border-color: #34495e;
     -fx-border-radius: 50%;
 }
