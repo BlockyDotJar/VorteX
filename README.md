@@ -7,11 +7,7 @@ First of all: **yes**, this application is **safe** to install/use as you can se
 Here are some questions you might want to ask me:
 
 <details>
-    <summary>
-        <div class="sml">
-            Why does a <b>Microsoft SmartScreen</b> warning appear after opening the <b>installer</b> or why do you want to exclude the <b>VorteX installation directory</b> and the <b>vxar.exe</b> process from Windows Defender?
-        </div>
-    </summary>
+    <summary>Why does a <b>Microsoft SmartScreen</b> warning appear after opening the <b>installer</b> or why do you want to exclude the <b>VorteX installation directory</b> and the <b>vxar.exe</b> process from Windows Defender?</summary>
     <hr>
     There are a view reasons for this:
     <ol>
@@ -141,20 +137,8 @@ If the program does terminal interaction, make it output a short notice like thi
     under certain conditions; type `show c' for details.
 ```
 
-The hypothetical commands `show w' and `show c' should show the appropriate parts of the General Public License. Of course, your program's commands might be different; for a GUI interface, you would use an “about box”.<br>
+The hypothetical commands \`show w' and `show c' should show the appropriate parts of the General Public License. Of course, your program's commands might be different; for a GUI interface, you would use an “about box”.<br>
 
 You should also get your employer (if you work as a programmer) or school, if any, to sign a “copyright disclaimer” for the program, if necessary. For more information on this, and how to apply and follow the GNU GPL, see <https://www.gnu.org/licenses/>.<br>
 
 The GNU General Public License does not permit incorporating your program into proprietary programs. If your program is a subroutine library, you may consider it more useful to permit linking proprietary applications with the library. If this is what you want to do, use the GNU Lesser General Public License instead of this License. But first, please read <https://www.gnu.org/licenses/why-not-lgpl.html>.
-
-<style>
-    .sml {
-        padding-left: 17px;
-    }
-
-    summary > div {
-      display: inline-block;
-      width: calc(100% - 40px);
-      vertical-align: middle;
-    }    
-</style>
