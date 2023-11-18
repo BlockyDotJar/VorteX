@@ -19,15 +19,14 @@ package dev.blocky.app.vx.handler;
 
 import dev.blocky.app.vx.codec.Base32Codec;
 import dev.blocky.app.vx.entities.NodeCreator;
-import dev.blocky.app.vx.windows.api.WindowsExplorer;
 import javafx.application.HostServices;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;

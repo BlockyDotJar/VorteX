@@ -310,8 +310,7 @@ public class VXApplication extends Application
             new Thread(() ->
             {
                 ApplicationUpdater updater = new ApplicationUpdater();
-                List<String> versionDetails = List.of();
-                //List<String> versionDetails = updater.newVersion(detailArea);
+                List<String> versionDetails = updater.newVersion(detailArea);
 
                 if (!versionDetails.isEmpty())
                 {
