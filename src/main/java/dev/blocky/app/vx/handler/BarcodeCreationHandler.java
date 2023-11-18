@@ -29,6 +29,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
@@ -40,11 +44,13 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -112,7 +118,7 @@ public class BarcodeCreationHandler
                             BarcodeFormat.UPC_A, BarcodeFormat.UPC_E
                     );
 
-            ComboBox<BarcodeFormat> barcodeFormat = creator.createComboBox("CODE_128", 170, 252, 220, barcodeFormats);
+            ComboBox<BarcodeFormat> barcodeFormat = creator.createComboBox("CODE_128", 170, 252, 220, barcodeFormats, false);
 
             anchorPane.getChildren().addAll(detailArea, barcodeInput, width, height, generateBarcode, clear, barcodeFormat);
 
@@ -303,9 +309,27 @@ public class BarcodeCreationHandler
 
                         ImageIO.write(SwingFXUtils.fromFXImage(resizedBarcodeImage, barcodeWithoutAlpha), FilenameUtils.getExtension(file.getName()), file);
 
-                        validAction(detailArea, "Successfully created '" + file.getName() + "' in directory " + file.getParent());
+                        String text = "Successfully created image '" + file.getName() + "' in directory " + file.getParent();
 
-                        WindowsExplorer.openDirectoryAndHighlightFile(detailArea, file);
+                        validAction(detailArea, text);
+
+                        SystemTray tray = SystemTray.getSystemTray();
+
+                        java.awt.Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+
+                        TrayIcon trayIcon = new TrayIcon(image);
+                        trayIcon.setImageAutoSize(true);
+                        trayIcon.addActionListener((e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, file));
+
+                        tray.add(trayIcon);
+
+                        String caption = "Successfully created barcode '" + file.getName() + "'";
+
+                        trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
+
+                        TimeUnit.MILLISECONDS.sleep(500);
+
+                        tray.remove(trayIcon);
                     }
                     catch (Exception e)
                     {

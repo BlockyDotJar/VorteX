@@ -19,11 +19,15 @@ package dev.blocky.app.vx.handler;
 
 import dev.blocky.app.vx.codec.Base32Codec;
 import dev.blocky.app.vx.entities.NodeCreator;
+import dev.blocky.app.vx.windows.api.WindowsExplorer;
 import javafx.application.HostServices;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
@@ -37,10 +41,12 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.PopOver;
 
+import java.awt.*;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static dev.blocky.app.vx.handler.ActionHandler.*;
@@ -184,13 +190,31 @@ public class ArchiveExtractionHandler
                     fileCount++;
                 }
 
-                validAction(detailArea, "Successfully extracted " + fileCount + " files and " + directoryCount + " directories from '" + fileToExtract.getName() + "' to " + extractIn.getAbsolutePath());
+                String text = "Successfully extracted " + fileCount + " files and " + directoryCount + " directories from '" + fileToExtract.getName() + "' to " + extractIn.getAbsolutePath();
+
+                validAction(detailArea, text);
 
                 extract.setDisable(true);
 
                 fileToExtract = null;
 
-                hostServices.showDocument(extractIn.getAbsolutePath());
+                SystemTray tray = SystemTray.getSystemTray();
+
+                Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+
+                TrayIcon trayIcon = new TrayIcon(image);
+                trayIcon.setImageAutoSize(true);
+                trayIcon.addActionListener((e) -> hostServices.showDocument(extractIn.getAbsolutePath()));
+
+                tray.add(trayIcon);
+
+                String caption = "Successfully extracted '" + zipFile.getFile().getName() + "'";
+
+                trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
+
+                TimeUnit.MILLISECONDS.sleep(500);
+
+                tray.remove(trayIcon);
             }
             catch (Exception e)
             {

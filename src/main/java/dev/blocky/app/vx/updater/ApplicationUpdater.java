@@ -216,9 +216,10 @@ public class ApplicationUpdater
                 Platform.runLater(() ->
                 {
                     String title = "Successfully downloaded newest version!";
-                    String headerText = "VorteX will now be closed, and the installation wizard will be opened.";
+                    String headerText = "Installation wizard was downloaded successfully!";
+                    String contentText = "VorteX will be closed after button interaction and the installation wizard will be opened.";
 
-                    Alert closeAlert = creator.createAlert(Alert.AlertType.INFORMATION, title, headerText, null);
+                    Alert closeAlert = creator.createAlert(Alert.AlertType.INFORMATION, title, headerText, contentText);
 
                     closeAlert.showAndWait();
 

@@ -35,7 +35,7 @@ public class WindowsExplorer
         {
             ProcessBuilder builder = new ProcessBuilder().command
                     (
-                            "explorer",
+                            "explorer.exe",
                             "/select,",
                             "\"" + file.getAbsolutePath() + "\""
                     );

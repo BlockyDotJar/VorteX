@@ -25,6 +25,9 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.layout.AnchorPane;
@@ -43,8 +46,11 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.control.CheckTreeView;
 import org.controlsfx.control.PopOver;
 
+import java.awt.*;
 import java.io.File;
+import java.util.List;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static dev.blocky.app.vx.handler.ActionHandler.*;
@@ -119,7 +125,7 @@ public class ArchiveCreationHandler
                             CompressionLevel.PRE_ULTRA, CompressionLevel.ULTRA
                     );
 
-            ComboBox<CompressionLevel> compressionLevel = creator.createComboBox("NORMAL", 10, 155, -1, compressionLevels);
+            ComboBox<CompressionLevel> compressionLevel = creator.createComboBox("NORMAL", 10, 155, -1, compressionLevels, false);
 
             TextField comment = creator.createTextField("Set comment for archive file", 10, 205, -1, true, true, true);
 
@@ -128,7 +134,7 @@ public class ArchiveCreationHandler
                             EncryptionMethod.ZIP_STANDARD, EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG, EncryptionMethod.AES
                     );
 
-            ComboBox<EncryptionMethod> encryptionMethod = creator.createComboBox("AES", 10, 255, 80, encryptionMethods);
+            ComboBox<EncryptionMethod> encryptionMethod = creator.createComboBox("AES", 10, 255, 80, encryptionMethods, false);
 
             ToggleGroup aesGroup = new ToggleGroup();
 
@@ -140,7 +146,7 @@ public class ArchiveCreationHandler
                             AesKeyStrength.KEY_STRENGTH_128, AesKeyStrength.KEY_STRENGTH_192, AesKeyStrength.KEY_STRENGTH_256
                     );
 
-            ComboBox<AesKeyStrength> aesKeyStrength = creator.createComboBox("KEY_STRENGTH_256", 10, 355, 205, aesKeyStrengths);
+            ComboBox<AesKeyStrength> aesKeyStrength = creator.createComboBox("KEY_STRENGTH_256", 10, 355, 205, aesKeyStrengths, false);
 
             anchorPane.getChildren().addAll(addFile, addFolder, create, clear, password, passwordCheck, passwordUnmasked, passwordCheckUnmasked, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aesKeyStrength, aes1, aes2, detailArea);
 
@@ -331,14 +337,32 @@ public class ArchiveCreationHandler
                     }
                 }
 
-                validAction(detailArea, "Successfully archived " + fileCount + " files and " + directoryCount + " directories to " + saveToFile.getName() + " in '" + saveToFile.getParent() + "'.");
+                String text = "Successfully archived " + fileCount + " files and " + directoryCount + " directories to " + saveToFile.getName() + " in '" + saveToFile.getParent() + "'.";
+
+                validAction(detailArea, text);
 
                 create.setDisable(true);
 
                 chosenFiles.clear();
                 chosenDirectories.clear();
 
-                WindowsExplorer.openDirectoryAndHighlightFile(detailArea, zipFile.getFile());
+                SystemTray tray = SystemTray.getSystemTray();
+
+                Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+
+                TrayIcon trayIcon = new TrayIcon(image);
+                trayIcon.setImageAutoSize(true);
+                trayIcon.addActionListener((e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, zipFile.getFile()));
+
+                tray.add(trayIcon);
+
+                String caption = "Successfully created '" + zipFile.getFile().getName() + "'";
+
+                trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
+
+                TimeUnit.MILLISECONDS.sleep(500);
+
+                tray.remove(trayIcon);
             }
             catch (Exception e)
             {

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package dev.blocky.app.vx.windows.api.registry;
+package dev.blocky.app.vx.windows.api.shellicon;
 
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.COM.Unknown;

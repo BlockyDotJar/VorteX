@@ -27,6 +27,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import org.controlsfx.control.PopOver;
+import org.controlsfx.control.ToggleSwitch;
 
 import java.io.File;
 import java.util.List;
@@ -43,10 +44,11 @@ public class NodeCreator
         return button;
     }
 
-    public <T> ComboBox<T> createComboBox(String text, double x, double y, double prefWidth, ObservableList<T> items)
+    public <T> ComboBox<T> createComboBox(String text, double x, double y, double prefWidth, ObservableList<T> items, boolean disabled)
     {
         ComboBox<T> comboBox = new ComboBox<>(items);
         comboBox.setPrefWidth(prefWidth == -1 ? 195 : prefWidth);
+        comboBox.setDisable(disabled);
         comboBox.setPromptText(text);
         comboBox.setTranslateX(x);
         comboBox.setTranslateY(y);
@@ -127,16 +129,6 @@ public class NodeCreator
         return imageView;
     }
 
-    public ImageView createImageView(String fileName, double width, double height, double x, double y)
-    {
-        ImageView imageView = new ImageView("assets/themes/" + fileName + ".png");
-        imageView.setFitWidth(width);
-        imageView.setFitHeight(height);
-        imageView.setTranslateX(x);
-        imageView.setTranslateY(y);
-        return imageView;
-    }
-
     public RadioButton createRadioButton(String text, ToggleGroup toggleGroup, double x, double y)
     {
         RadioButton radioButton = new RadioButton(text);
@@ -160,6 +152,15 @@ public class NodeCreator
         alert.setTitle(title);
         alert.setHeaderText(headerText);
         alert.getDialogPane().setContent(content);
+        return alert;
+    }
+
+    public Alert createAlert(Alert.AlertType alertType, String title, String headerText, String contentText)
+    {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(headerText);
+        alert.setContentText(contentText);
         return alert;
     }
 
@@ -188,5 +189,15 @@ public class NodeCreator
         hyperlink.setTranslateY(y);
         hyperlink.setOnAction((e) -> hostServices.showDocument(releaseLink));
         return hyperlink;
+    }
+
+    public ToggleSwitch createToggleSwitch(double x, double y, boolean disabled)
+    {
+        ToggleSwitch toggleSwitch = new ToggleSwitch();
+        toggleSwitch.setDisable(disabled);
+        toggleSwitch.setSelected(!disabled);
+        toggleSwitch.setTranslateX(x);
+        toggleSwitch.setTranslateY(y);
+        return toggleSwitch;
     }
 }

@@ -380,3 +380,9 @@
 .toggle-switch .thumb-area {
     -fx-background-color: #69C2D1;
 }
+
+.label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #C6C6C6;
+}

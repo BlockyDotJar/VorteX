@@ -78,7 +78,7 @@ public class BarcodeReadingHandler
                             BarcodeFormat.RSS_14, BarcodeFormat.RSS_EXPANDED
                     );
 
-            ComboBox<BarcodeFormat> barcodeFormat = creator.createComboBox("CODE_128", 245, 252, 220, barcodeFormats);
+            ComboBox<BarcodeFormat> barcodeFormat = creator.createComboBox("CODE_128", 245, 252, 220, barcodeFormats, false);
 
             anchorPane.getChildren().addAll(detailArea, barcodeOutput, chooseBarcodeImage, clear, barcodeFormat);
 

@@ -17,6 +17,8 @@
  */
 package dev.blocky.app.vx;
 
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.WinReg;
 import dev.blocky.app.vx.entities.NodeCreator;
 import dev.blocky.app.vx.updater.ApplicationUpdater;
 import dev.blocky.app.vx.windows.api.dwm.DWMAttribute;
@@ -44,6 +46,7 @@ import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.controlsfx.control.HiddenSidesPane;
 
 import java.io.File;
@@ -57,6 +60,7 @@ import static dev.blocky.app.vx.handler.ArchiveExtractionHandler.initExtractArch
 import static dev.blocky.app.vx.handler.ArchiveOpeningHandler.initOpenArchive;
 import static dev.blocky.app.vx.handler.BarcodeCreationHandler.initCreateBarcode;
 import static dev.blocky.app.vx.handler.BarcodeReadingHandler.initReadBarcode;
+import static dev.blocky.app.vx.handler.SettingHandler.initSettings;
 
 public class VXApplication extends Application
 {
@@ -70,13 +74,36 @@ public class VXApplication extends Application
         if (args.length > 1)
         {
             String title = "Error while opening VorteX...";
-            String headerText =
+            String headerText = "Multi file selection detected...";
+            String contentText =
                     """
-                                You can't open more then one files a time.
-                                VorteX will now be closed...
+                            You can't open more then one files a time.
+                            VorteX will be closed after button interaction...
                             """;
 
-            Alert closeAlert = creator.createAlert(Alert.AlertType.ERROR, title, headerText, null);
+            Alert closeAlert = creator.createAlert(Alert.AlertType.ERROR, title, headerText, contentText);
+            closeAlert.showAndWait();
+
+            System.exit(0);
+            return;
+        }
+
+        HostServices hostServices = getHostServices();
+
+        if (!SystemUtils.IS_OS_WINDOWS)
+        {
+            String title = "Error while opening VorteX...";
+            String headerText = "Unsupported operating system detected...";
+
+            AnchorPane alertPane = new AnchorPane();
+
+            Label errorLabel = creator.createLabel("You are trying to open this application on an operating system that isn't supported.", 4, 0);
+            Hyperlink hyperlink = creator.createHyperlink(hostServices, "Read here about supported platforms.", "https://github.com/BlockyDotJar/VorteX#supported-platforms", 0, 10);
+            Label closeLabel = creator.createLabel("VorteX will be closed after button interaction...", 4, 25);
+
+            alertPane.getChildren().addAll(errorLabel, hyperlink, closeLabel);
+
+            Alert closeAlert = creator.createAlert(Alert.AlertType.ERROR, title, headerText, alertPane);
             closeAlert.showAndWait();
 
             System.exit(0);
@@ -95,6 +122,8 @@ public class VXApplication extends Application
         Button extractArchive = creator.createButton("Extract Archive", 270, 10, 125, false);
         Button createBarcode = creator.createButton("Create Barcode", 10, 50, 125, false);
         Button readBarcode = creator.createButton("Read Barcode", 140, 50, 125, false);
+
+        Button settings = creator.createButton("\u2699", 565, 50, 30, false);
 
         if (args.length == 0)
         {
@@ -145,7 +174,7 @@ public class VXApplication extends Application
                             CompressionLevel.PRE_ULTRA, CompressionLevel.ULTRA
                     );
 
-            ComboBox<CompressionLevel> compressionLevel = creator.createComboBox("NORMAL", 10, 155, -1, compressionLevels);
+            ComboBox<CompressionLevel> compressionLevel = creator.createComboBox("NORMAL", 10, 155, -1, compressionLevels, false);
 
             TextField comment = creator.createTextField("Set comment for archive file", 10, 205, -1, true, true, true);
 
@@ -154,7 +183,7 @@ public class VXApplication extends Application
                             EncryptionMethod.ZIP_STANDARD, EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG, EncryptionMethod.AES
                     );
 
-            ComboBox<EncryptionMethod> encryptionMethod = creator.createComboBox("AES", 10, 255, 80, encryptionMethods);
+            ComboBox<EncryptionMethod> encryptionMethod = creator.createComboBox("AES", 10, 255, 80, encryptionMethods, false);
 
             ToggleGroup aesGroup = new ToggleGroup();
 
@@ -166,7 +195,7 @@ public class VXApplication extends Application
                             AesKeyStrength.KEY_STRENGTH_128, AesKeyStrength.KEY_STRENGTH_192, AesKeyStrength.KEY_STRENGTH_256
                     );
 
-            ComboBox<AesKeyStrength> aesKeyStrength = creator.createComboBox("KEY_STRENGTH_256", 10, 355, 205, aesKeyStrengths);
+            ComboBox<AesKeyStrength> aesKeyStrength = creator.createComboBox("KEY_STRENGTH_256", 10, 355, 205, aesKeyStrengths, false);
 
             anchorPane.getChildren().addAll(addFile, addFolder, create, clear, password, passwordCheck, passwordUnmasked, passwordCheckUnmasked, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aesKeyStrength, aes1, aes2, detailArea);
 
@@ -192,23 +221,23 @@ public class VXApplication extends Application
             if (!file.exists() || !file.isFile() || file.isDirectory() || !FilenameUtils.getExtension(file.getName()).equals("vxar"))
             {
                 String title = "Error while opening VorteX...";
-
-                String headerText = String.format(
+                String headerText = "Unknown error detected...";
+                String contentText = String.format(
                         """
-                                    A weird error occurred on application start.
+                                A weird error occurred on application start.
+                                
+                                Here are some parameter that can help you finding the issue:
+                                > file.exists = %b
+                                > file.isFile = %b
+                                > file.isDirectory = %b
+                                > file.isVorteXArchive = %b
                                     
-                                    Here are some parameter that can help you finding the issue:
-                                    > file.exists = %b
-                                    > file.isFile = %b
-                                    > file.isDirectory = %b
-                                    > file.isVorteXArchive = %b
-                                    
-                                    VorteX will be closed after button interaction...
+                                VorteX will be closed after button interaction...
                                 """,
                         file.exists(), file.isFile(), file.isDirectory(), FilenameUtils.getExtension(file.getName()).equals("vxar")
                 );
 
-                Alert closeAlert = creator.createAlert(Alert.AlertType.ERROR, title, headerText, null);
+                Alert closeAlert = creator.createAlert(Alert.AlertType.ERROR, title, headerText, contentText);
                 closeAlert.showAndWait();
 
                 System.exit(0);
@@ -228,14 +257,17 @@ public class VXApplication extends Application
         hiddenPane.setOnMouseEntered(e -> hiddenSidesPane.setPinnedSide(Side.BOTTOM));
         hiddenPane.setOnMouseExited(e -> hiddenSidesPane.setPinnedSide(null));
 
-        hiddenPane.getChildren().addAll(createArchive, openArchive, extractArchive, createBarcode, readBarcode);
+        hiddenPane.getChildren().addAll(createArchive, openArchive, extractArchive, createBarcode, readBarcode, settings);
 
         hiddenSidesPane.setBottom(hiddenPane);
 
         Image icon = new Image(getClass().getResource("/assets/icons/icon.png").openStream());
 
+        // TODO: dark-styles.css and styles.css corrections
+        // TODO: dark alert style
+
         Scene scene = new Scene(hiddenSidesPane, 605, 525);
-        scene.getStylesheets().add(getClass().getResource("/assets/ui/css/styles.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/assets/ui/css/dark-styles.css").toExternalForm());
         scene.setFill(Color.TRANSPARENT);
 
         stage.setScene(scene);
@@ -245,23 +277,27 @@ public class VXApplication extends Application
         stage.setResizable(false);
         stage.show();
 
-        HostServices hostServices = getHostServices();
-
         initCreateArchive(stage, anchorPane, detailArea, createArchive);
         initOpenArchive(anchorPane, detailArea, openArchive);
         initExtractArchive(stage, hostServices, anchorPane, detailArea, extractArchive);
         initCreateBarcode(stage, anchorPane, detailArea, createBarcode);
         initReadBarcode(stage, anchorPane, detailArea, readBarcode);
 
+        initSettings(anchorPane, detailArea, settings);
+
         String script = IOUtils.toString(getClass().getResource("/assets/scripts/webEngine.js"), StandardCharsets.UTF_8);
 
         Platform.runLater(() ->
         {
-            String osName = System.getProperty("os.name");
-            String[] osParts = osName.split(" ");
+            // TODO: let user choose between DWMSBT_MAINWINDOW, DWMSBT_TABBEDWINDOW and DWMSBT_TRANSIENTWINDOW
 
-            if (osParts.length >= 2 && StringUtils.isNumeric(osParts[1]) && Integer.parseInt(osParts[1]) == 11)
+            String displayVersion = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion");
+            int dvNumber = Integer.parseInt(StringUtils.remove(displayVersion, "H"));
+
+            if (SystemUtils.IS_OS_WINDOWS_11 && dvNumber >= 222)
             {
+                scene.getStylesheets().add(getClass().getResource("/assets/ui/css/dwm-styles.css").toExternalForm());
+
                 DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle(stage);
                 DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, true);
 
@@ -274,7 +310,8 @@ public class VXApplication extends Application
             new Thread(() ->
             {
                 ApplicationUpdater updater = new ApplicationUpdater();
-                List<String> versionDetails = updater.newVersion(detailArea);
+                List<String> versionDetails = List.of();
+                //List<String> versionDetails = updater.newVersion(detailArea);
 
                 if (!versionDetails.isEmpty())
                 {
