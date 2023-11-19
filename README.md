@@ -1,5 +1,7 @@
 ## VorteX
 
+<!--TODO: Add more fancy stuff here-->
+
 ### Why can't I change some style settings?
 
 <!--TODO: Add some images-->
@@ -36,12 +38,14 @@ Here are some questions you might want to ask me:
         <li>Submiting this application for <a href="https://www.microsoft.com/en-us/wdsi/filesubmission">malware analysis to Microsoft</a> becomes very time-consuming and it is very annoying to submit and wait for days or even weeks for every single version to be approved by Microsoft</li>
     </ol>
     Read more about this <a href="https://stackoverflow.com/a/51113771">here</a> and <a href="https://stackoverflow.com/a/66582477">here</a>.
-    <br><br><b>So i am forced to exclude this stuff from Windows Defender?</b>
+    <br><br><b>So I am forced to exclude this stuff from Windows Defender?</b>
     <br><b>No</b>, you aren't. This is only needed if Windows Defender is weird (again) and detects some virus in the exe. Yeah classic Windows Defender. It is really annoying for me as a developer that Windows Defender randomly detects non-signed '.exe' files as malicious software, but excluding all of this from Windows Defender is the only simple and inexpensive way of preventing the program from randomly being deleting/blacklisting some versions of VorteX.
     <br><br>If you don't feel comfortable with this solution, you can try to remove the Windows Defender exclusion (if you have already installed VorteX with the exclusion) with <a href="#how-do-i-remove-windows-defender-exclusion-for-vortex">this steps.</a>
     <br><br>If everything works and the Windows Defender now doesn't weirdly detect something malicious, you are now safe to use VorteX without the exclusion! (There sadly is no garanty, that this lasts forever)
     <br>I actually don't know if other Antiviruses like Norton or McAfee are also detecting anything weird going on or if it's just Windows Defender being weird. (If that is true please open an issue here on GitHub and let me know)
 </details>
+
+<!--TODO: Add description-->
 
 <details>
     <summary>
@@ -69,6 +73,9 @@ See [license](https://github.com/BlockyDotJar/VorteX/blob/main/LICENSE) and [con
 This project requires **Java 17+**
 <br>All dependencies and plugins are managed automatically by Gradle.
 
+* kotlin-stdlib
+    * Version: **v1.9.20**
+    * [Github](https://github.com/JetBrains/kotlin/tree/master/libraries/stdlib)
 * javafx-base (**:win**)
     * Version: **v21.0.1**
     * [Github](https://github.com/openjdk/jfx/tree/master/modules/javafx.base)
@@ -117,12 +124,6 @@ This project requires **Java 17+**
 * commons-codec
     * Version: **v1.16.0**
     * [Github](https://github.com/apache/commons-codec)
-* slf4j-api
-    * Version: **v2.0.9**
-    * [Github](https://github.com/qos-ch/slf4j)
-* logback-classic
-    * Version: **v1.4.11**
-    * [Github](https://github.com/qos-ch/logback/tree/master/logback-classic)
 
 ### Plugins
 
@@ -132,6 +133,11 @@ This project requires **Java 17+**
 * launch4j
     * Version: **v3.0.5**
     * [Github](https://github.com/TheBoegl/gradle-launch4j)
+* kotlin-jvm
+    * Version: **v1.9.20**
+    * [Github](https://github.com/JetBrains/kotlin/tree/master/libraries/stdlib/jvm)
+
+<!--TODO: Add other used tools-->
 
 ### LICENSE
 
