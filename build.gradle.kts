@@ -31,6 +31,7 @@ dependencies {
     implementation("net.java.dev.jna:jna-platform:5.13.0")
 
     api("org.kohsuke:github-api:1.317")
+    api("org.json:json:20231013")
 
     api("net.lingala.zip4j:zip4j:2.11.5")
 

@@ -209,7 +209,7 @@
 .check-box {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-text-fill: #C6C6C6;
+    -fx-text-fill: #333;
 }
 
 .check-box .box {
@@ -241,7 +241,7 @@
 
 .radio-button {
     -fx-font-size: 16px;
-    -fx-text-fill: #C6C6C6;
+    -fx-text-fill: #333;
     -fx-padding: 5px;
     -fx-background-radius: 0;
 }
@@ -377,6 +377,10 @@
     -fx-text-fill: #333;
 }
 
-.toggle-switch .thumb-area {
+.toggle-switch:selected .thumb-area {
     -fx-background-color: #69C2D1;
+}
+
+.toggle-switch:disabled .thumb-area:disabled {
+    -fx-background-color: #fff;
 }

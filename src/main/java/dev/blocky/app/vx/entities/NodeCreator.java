@@ -55,11 +55,12 @@ public class NodeCreator
         return comboBox;
     }
 
-    public TextField createTextField(String text, double x, double y, double prefWidth, boolean managed, boolean visible, boolean editable)
+    public TextField createTextField(String text, double x, double y, double prefWidth, boolean managed, boolean visible, boolean editable, boolean disabled)
     {
         TextField textField = new TextField();
         textField.setPrefSize(prefWidth == -1 ? 425 : prefWidth, 30);
         textField.setEditable(editable);
+        textField.setDisable(disabled);
         textField.setPromptText(text);
         textField.setManaged(managed);
         textField.setVisible(visible);
@@ -191,11 +192,11 @@ public class NodeCreator
         return hyperlink;
     }
 
-    public ToggleSwitch createToggleSwitch(double x, double y, boolean disabled)
+    public ToggleSwitch createToggleSwitch(double x, double y, boolean selected, boolean disabled)
     {
         ToggleSwitch toggleSwitch = new ToggleSwitch();
         toggleSwitch.setDisable(disabled);
-        toggleSwitch.setSelected(!disabled);
+        toggleSwitch.setSelected(selected);
         toggleSwitch.setTranslateX(x);
         toggleSwitch.setTranslateY(y);
         return toggleSwitch;

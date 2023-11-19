@@ -1,6 +1,6 @@
 /**
- * custom_window - A small collection of utility methods to customize a JavaFX stage.
- * Copyright (C) 2022 M. Oguz Tas (mimoguz - https://github.com/mimoguz)
+ * VorteX - General utility program written in Java.
+ * Copyright (C) 2023 BlockyDotJar (aka. Dominic R.)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,30 +17,16 @@
  */
 package dev.blocky.app.vx.windows.api.dwm;
 
-public enum DWMAttribute
+public class DWMWindow
 {
-    DWMSBT_DISABLE(1),
-
-    DWMSBT_MAINWINDOW(2),
-
-    DWMSBT_TABBEDWINDOW(4),
-
-    DWMWA_BORDER_COLOR(34),
-
-    DWMWA_CAPTION_COLOR(35),
-
-    DWMWA_MICA_EFFECT(1029),
-
-    DWMWA_SYSTEMBACKDROP_TYPE(38),
-
-    DWMWA_TEXT_COLOR(36),
-
-    DWMWA_USE_IMMERSIVE_DARK_MODE(20);
-
-    public final int value;
-
-    DWMAttribute(int value)
+    public static void setMicaMaterial(String windowTitle, DWMAttribute dwma, boolean useImmersiveDarkMode)
     {
-        this.value = value;
+        DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle(windowTitle);
+        DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, useImmersiveDarkMode);
+
+        if (!DWMHandler.dwmSetIntValue(handle, DWMAttribute.DWMWA_SYSTEMBACKDROP_TYPE, dwma.value))
+        {
+            DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_MICA_EFFECT, true);
+        }
     }
 }

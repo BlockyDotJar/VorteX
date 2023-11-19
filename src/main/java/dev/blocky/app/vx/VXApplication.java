@@ -22,7 +22,7 @@ import com.sun.jna.platform.win32.WinReg;
 import dev.blocky.app.vx.entities.NodeCreator;
 import dev.blocky.app.vx.updater.ApplicationUpdater;
 import dev.blocky.app.vx.windows.api.dwm.DWMAttribute;
-import dev.blocky.app.vx.windows.api.dwm.DWMHandler;
+import dev.blocky.app.vx.windows.api.dwm.DWMWindow;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
@@ -149,20 +149,52 @@ public class VXApplication extends Application
                     return;
                 }
 
-                passwordCheck.textProperty().addListener((obsCheck, oldValCheck, newValCheck) ->
+                if (passwordCheck.getText().isBlank())
                 {
-                    if (newValCheck.isBlank())
-                    {
-                        create.setDisable(true);
-                        return;
-                    }
+                    create.setDisable(true);
+                    return;
+                }
 
-                    create.setDisable(false);
-                });
+                if (!newVal.equals(passwordCheck.getText()))
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                create.setDisable(false);
             });
 
-            TextField passwordUnmasked = creator.createTextField("Enter a password", 10, 65, -1, false, false, true);
-            TextField passwordCheckUnmasked = creator.createTextField("Confirm password", 10, 105, -1, false, false, true);
+            passwordCheck.textProperty().addListener((obsCheck, oldValCheck, newValCheck) ->
+            {
+                if (chosenFiles.isEmpty() && chosenDirectories.isEmpty())
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                if (newValCheck.isBlank())
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                if (password.getText().isBlank())
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                if (!password.getText().equals(newValCheck))
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                create.setDisable(false);
+            });
+
+            TextField passwordUnmasked = creator.createTextField("Enter a password", 10, 65, -1, false, false, true, false);
+            TextField passwordCheckUnmasked = creator.createTextField("Confirm password", 10, 105, -1, false, false, true, false);
 
             CheckBox showPassword = creator.createCheckBox("Show password", 460, 69);
             CheckBox showPasswordCheck = creator.createCheckBox("Show password", 460, 109);
@@ -176,7 +208,7 @@ public class VXApplication extends Application
 
             ComboBox<CompressionLevel> compressionLevel = creator.createComboBox("NORMAL", 10, 155, -1, compressionLevels, false);
 
-            TextField comment = creator.createTextField("Set comment for archive file", 10, 205, -1, true, true, true);
+            TextField comment = creator.createTextField("Set comment for archive file", 10, 205, -1, true, true, true, false);
 
             ObservableList<EncryptionMethod> encryptionMethods = FXCollections.observableArrayList
                     (
@@ -201,7 +233,7 @@ public class VXApplication extends Application
 
             initAddFile(stage, detailArea, addFile, create, password, passwordCheck);
             initAddFolder(stage, detailArea, addFolder, create, password, passwordCheck);
-            initCreate(stage, detailArea, create, password, passwordCheck, comment);
+            initCreate(stage, detailArea, create, password, comment);
             initClear(detailArea, clear, create, password, passwordCheck, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aes1, aes2, aesKeyStrength);
             initShowPassword(showPassword, password, passwordUnmasked);
             initShowPasswordCheck(showPasswordCheck, passwordCheck, passwordCheckUnmasked);
@@ -225,7 +257,7 @@ public class VXApplication extends Application
                 String contentText = String.format(
                         """
                                 A weird error occurred on application start.
-                                
+                                                                
                                 Here are some parameter that can help you finding the issue:
                                 > file.exists = %b
                                 > file.isFile = %b
@@ -263,8 +295,8 @@ public class VXApplication extends Application
 
         Image icon = new Image(getClass().getResource("/assets/icons/icon.png").openStream());
 
-        // TODO: dark-styles.css and styles.css corrections
         // TODO: dark alert style
+        // TODO: Better Scene handling
 
         Scene scene = new Scene(hiddenSidesPane, 605, 525);
         scene.getStylesheets().add(getClass().getResource("/assets/ui/css/dark-styles.css").toExternalForm());
@@ -289,7 +321,7 @@ public class VXApplication extends Application
 
         Platform.runLater(() ->
         {
-            // TODO: let user choose between DWMSBT_MAINWINDOW, DWMSBT_TABBEDWINDOW and DWMSBT_TRANSIENTWINDOW
+            // TODO: let user choose between DWMSBT_MAINWINDOW and DWMSBT_TABBEDWINDOW
 
             String displayVersion = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion");
             int dvNumber = Integer.parseInt(StringUtils.remove(displayVersion, "H"));
@@ -298,13 +330,7 @@ public class VXApplication extends Application
             {
                 scene.getStylesheets().add(getClass().getResource("/assets/ui/css/dwm-styles.css").toExternalForm());
 
-                DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle(stage);
-                DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, true);
-
-                if (!DWMHandler.dwmSetIntValue(handle, DWMAttribute.DWMWA_SYSTEMBACKDROP_TYPE, DWMAttribute.DWMSBT_MAINWINDOW.value))
-                {
-                    DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_MICA_EFFECT, true);
-                }
+                DWMWindow.setMicaMaterial(stage.getTitle(), DWMAttribute.DWMSBT_MAINWINDOW, true);
             }
 
             new Thread(() ->

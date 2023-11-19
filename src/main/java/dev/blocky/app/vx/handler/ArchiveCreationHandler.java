@@ -100,20 +100,52 @@ public class ArchiveCreationHandler
                     return;
                 }
 
-                passwordCheck.textProperty().addListener((obsCheck, oldValCheck, newValCheck) ->
+                if (passwordCheck.getText().isBlank())
                 {
-                    if (newValCheck.isBlank())
-                    {
-                        create.setDisable(true);
-                        return;
-                    }
+                    create.setDisable(true);
+                    return;
+                }
 
-                    create.setDisable(false);
-                });
+                if (!newVal.equals(passwordCheck.getText()))
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                create.setDisable(false);
             });
 
-            TextField passwordUnmasked = creator.createTextField("Enter a password", 10, 65, -1, false, false, true);
-            TextField passwordCheckUnmasked = creator.createTextField("Confirm password", 10, 105, -1, false, false, true);
+            passwordCheck.textProperty().addListener((obsCheck, oldValCheck, newValCheck) ->
+            {
+                if (chosenFiles.isEmpty() && chosenDirectories.isEmpty())
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                if (newValCheck.isBlank())
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                if (password.getText().isBlank())
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                if (!password.getText().equals(newValCheck))
+                {
+                    create.setDisable(true);
+                    return;
+                }
+
+                create.setDisable(false);
+            });
+
+            TextField passwordUnmasked = creator.createTextField("Enter a password", 10, 65, -1, false, false, true, false);
+            TextField passwordCheckUnmasked = creator.createTextField("Confirm password", 10, 105, -1, false, false, true, false);
 
             CheckBox showPassword = creator.createCheckBox("Show password", 460, 69);
             CheckBox showPasswordCheck = creator.createCheckBox("Show password", 460, 109);
@@ -127,7 +159,7 @@ public class ArchiveCreationHandler
 
             ComboBox<CompressionLevel> compressionLevel = creator.createComboBox("NORMAL", 10, 155, -1, compressionLevels, false);
 
-            TextField comment = creator.createTextField("Set comment for archive file", 10, 205, -1, true, true, true);
+            TextField comment = creator.createTextField("Set comment for archive file", 10, 205, -1, true, true, true, false);
 
             ObservableList<EncryptionMethod> encryptionMethods = FXCollections.observableArrayList
                     (
@@ -152,7 +184,7 @@ public class ArchiveCreationHandler
 
             initAddFile(stage, detailArea, addFile, create, password, passwordCheck);
             initAddFolder(stage, detailArea, addFolder, create, password, passwordCheck);
-            initCreate(stage, detailArea, create, password, passwordCheck, comment);
+            initCreate(stage, detailArea, create, password, comment);
             initClear(detailArea, clear, create, password, passwordCheck, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aes1, aes2, aesKeyStrength);
             initShowPassword(showPassword, password, passwordUnmasked);
             initShowPasswordCheck(showPasswordCheck, passwordCheck, passwordCheckUnmasked);
@@ -196,7 +228,7 @@ public class ArchiveCreationHandler
 
                 initCreationPreview(detailArea, create);
 
-                if (!password.getText().isBlank() && !passwordCheck.getText().isBlank())
+                if (!password.getText().isBlank() && !passwordCheck.getText().isBlank() && passwordCheck.getText().equals(password.getText()))
                 {
                     create.setDisable(false);
                 }
@@ -236,7 +268,7 @@ public class ArchiveCreationHandler
 
                 initCreationPreview(detailArea, create);
 
-                if (!password.getText().isBlank() && !passwordCheck.getText().isBlank())
+                if (!password.getText().isBlank() && !passwordCheck.getText().isBlank() && passwordCheck.getText().equals(password.getText()))
                 {
                     create.setDisable(false);
                 }
@@ -248,30 +280,12 @@ public class ArchiveCreationHandler
         });
     }
 
-    public static void initCreate(Stage stage, TextArea detailArea, Button create, PasswordField password, PasswordField passwordCheck, TextField comment)
+    public static void initCreate(Stage stage, TextArea detailArea, Button create, PasswordField password, TextField comment)
     {
         create.setOnAction(event ->
         {
             try
             {
-                if (password.getText().isBlank())
-                {
-                    invalidAction(detailArea, "Please enter a password to continue.");
-                    return;
-                }
-
-                if (passwordCheck.getText().isBlank())
-                {
-                    invalidAction(detailArea, "Please confirm your password to continue.");
-                    return;
-                }
-
-                if (!passwordCheck.getText().equals(password.getText()))
-                {
-                    invalidAction(detailArea, "Passwords do not match.");
-                    return;
-                }
-
                 ZipParameters zipParameters = new ZipParameters();
                 zipParameters.setFileComment(comment.getText());
                 zipParameters.setAesKeyStrength(aesks);

@@ -25,14 +25,15 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.oned.*;
 import dev.blocky.app.vx.entities.NodeCreator;
 import dev.blocky.app.vx.windows.api.WindowsExplorer;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
@@ -76,7 +77,7 @@ public class BarcodeCreationHandler
             Button generateBarcode = creator.createButton("Generate", 10, 250, 100, true);
             Button clear = creator.createButton("Clear", 500, 250, 90, false);
 
-            TextField barcodeInput = creator.createTextField("Enter the input for the barcode", 10, 300, 380, true, true, true);
+            TextField barcodeInput = creator.createTextField("Enter the input for the barcode", 10, 300, 380, true, true, true, false);
 
             barcodeInput.textProperty().addListener((obs, oldVal, newVal) ->
             {
@@ -89,25 +90,11 @@ public class BarcodeCreationHandler
                 generateBarcode.setDisable(false);
             });
 
-            TextField width = creator.createTextField("Width", 400, 300, 90, true, true, true);
+            TextField width = creator.createTextField("Width", 400, 300, 90, true, true, true, false);
+            width.textProperty().addListener(createChangeListener(width));
 
-            width.textProperty().addListener((obs, oldVal, newVal) ->
-            {
-                if (!newVal.matches("\\d*"))
-                {
-                    width.setText(newVal.replaceAll("[^\\d.]", ""));
-                }
-            });
-
-            TextField height = creator.createTextField("Height", 500, 300, 90, true, true, true);
-
-            height.textProperty().addListener((obs, oldVal, newVal) ->
-            {
-                if (!newVal.matches("\\d*"))
-                {
-                    height.setText(newVal.replaceAll("[^\\d.]", ""));
-                }
-            });
+            TextField height = creator.createTextField("Height", 500, 300, 90, true, true, true, false);
+            height.textProperty().addListener(createChangeListener(height));
 
             ObservableList<BarcodeFormat> barcodeFormats = FXCollections.observableArrayList
                     (
@@ -404,5 +391,16 @@ public class BarcodeCreationHandler
 
             anchorPane.getChildren().remove(bcImage);
         });
+    }
+
+    private static ChangeListener<? super String> createChangeListener(TextField textField)
+    {
+        return (obs, oldVal, newVal) ->
+        {
+            if (!newVal.matches("\\d*"))
+            {
+                textField.setText(newVal.replaceAll("[^\\d.]", ""));
+            }
+        };
     }
 }

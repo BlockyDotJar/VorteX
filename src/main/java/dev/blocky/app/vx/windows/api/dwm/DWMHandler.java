@@ -20,9 +20,11 @@ package dev.blocky.app.vx.windows.api.dwm;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.PointerType;
-import com.sun.jna.platform.win32.*;
+import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.W32Errors;
+import com.sun.jna.platform.win32.WinDef;
+import com.sun.jna.platform.win32.WinNT;
 import javafx.scene.paint.Color;
-import javafx.stage.Stage;
 
 public class DWMHandler
 {
@@ -36,9 +38,9 @@ public class DWMHandler
         }
     }
 
-    private interface DwmSupport extends Library
+    private interface DWMSupport extends Library
     {
-        DwmSupport INSTANCE = Native.load("dwmapi", DwmSupport.class);
+        DWMSupport INSTANCE = Native.load("dwmapi", DWMSupport.class);
 
         WinNT.HRESULT DwmSetWindowAttribute
                 (
@@ -58,7 +60,7 @@ public class DWMHandler
 
         return isOk
                 (
-                        DwmSupport.INSTANCE.DwmSetWindowAttribute
+                        DWMSupport.INSTANCE.DwmSetWindowAttribute
                                 (
                                         handle.value,
                                         attribute.value,
@@ -77,7 +79,7 @@ public class DWMHandler
 
         return isOk
                 (
-                        DwmSupport.INSTANCE.DwmSetWindowAttribute
+                        DWMSupport.INSTANCE.DwmSetWindowAttribute
                                 (
                                         handle.value,
                                         attribute.value,
@@ -87,10 +89,9 @@ public class DWMHandler
                 );
     }
 
-    public static WindowHandle findWindowHandle(Stage stage)
+    public static WindowHandle findWindowHandle(String windowTitle)
     {
-        String title = stage.getTitle();
-        WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, title);
+        WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, windowTitle);
 
         if (hwnd != null)
         {
@@ -99,32 +100,32 @@ public class DWMHandler
         return null;
     }
 
-    public static boolean setBorderColor(final WindowHandle handle, Color color)
+    public static boolean setBorderColor(WindowHandle handle, Color color)
     {
         return dwmSetIntValue(handle, DWMAttribute.DWMWA_BORDER_COLOR, RGB(color));
     }
 
-    public static boolean setCaptionColor(final WindowHandle handle, final Color color)
+    public static boolean setCaptionColor(WindowHandle handle, Color color)
     {
         return dwmSetIntValue(handle, DWMAttribute.DWMWA_CAPTION_COLOR, RGB(color));
     }
 
-    public static boolean setTextColor(final WindowHandle handle, final Color color)
+    public static boolean setTextColor(WindowHandle handle, Color color)
     {
         return dwmSetIntValue(handle, DWMAttribute.DWMWA_TEXT_COLOR, RGB(color));
     }
 
-    private static int floatingTo8Bit(final double n)
+    private static int floatingTo8Bit(double n)
     {
         return (int) Math.min(255.0, Math.max(n * 255.0, 0.0));
     }
 
-    private static boolean isOk(final WinNT.HRESULT result)
+    private static boolean isOk(WinNT.HRESULT result)
     {
         return WinNT.HRESULT.compare(result, W32Errors.S_OK) == 0;
     }
 
-    private static int RGB(final Color color)
+    static int RGB(Color color)
     {
         return (floatingTo8Bit(color.getBlue()) << 16)
                 | (floatingTo8Bit(color.getGreen()) << 8)

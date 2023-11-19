@@ -1,5 +1,5 @@
 .root {
-    -fx-background-color: #E6E6FA;
+    -fx-background-color: #222;
 }
 
 .button {
@@ -377,8 +377,12 @@
     -fx-text-fill: #333;
 }
 
-.toggle-switch .thumb-area {
+.toggle-switch:selected .thumb-area {
     -fx-background-color: #69C2D1;
+}
+
+.toggle-switch .thumb-area {
+    -fx-background-color: #fff;
 }
 
 .label {

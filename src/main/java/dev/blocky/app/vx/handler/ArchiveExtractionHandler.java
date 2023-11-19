@@ -93,7 +93,7 @@ public class ArchiveExtractionHandler
                 extract.setDisable(false);
             });
 
-            TextField passwordUnmasked = creator.createTextField("Enter the password of the archive", 10, 220, -1, false, false, true);
+            TextField passwordUnmasked = creator.createTextField("Enter the password of the archive", 10, 220, -1, false, false, true, false);
 
             CheckBox showPassword = creator.createCheckBox("Show password", 460, 224);
 
