@@ -209,7 +209,7 @@
 .check-box {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-text-fill: #333;
+    -fx-text-fill: #C6C6C6;
 }
 
 .check-box .box {
@@ -241,7 +241,7 @@
 
 .radio-button {
     -fx-font-size: 16px;
-    -fx-text-fill: #333;
+    -fx-text-fill: #C6C6C6;
     -fx-padding: 5px;
     -fx-background-radius: 0;
 }
@@ -389,11 +389,11 @@
 .label {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-text-fill: #333;
+    -fx-text-fill: #C6C6C6;
 }
 
 .hyperlink {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-text-fill: #333;
+    -fx-text-fill: #C6C6C6;
 }

@@ -115,6 +115,17 @@ public class DWMHandler
         return dwmSetIntValue(handle, DWMAttribute.DWMWA_TEXT_COLOR, RGB(color));
     }
 
+    public static void setMicaMaterial(DWMAttribute dwma, boolean useImmersiveDarkMode)
+    {
+        DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle("VorteX");
+        DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, useImmersiveDarkMode);
+
+        if (!DWMHandler.dwmSetIntValue(handle, DWMAttribute.DWMWA_SYSTEMBACKDROP_TYPE, dwma.value))
+        {
+            DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_MICA_EFFECT, true);
+        }
+    }
+
     private static int floatingTo8Bit(double n)
     {
         return (int) Math.min(255.0, Math.max(n * 255.0, 0.0));

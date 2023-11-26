@@ -43,4 +43,16 @@ public enum DWMAttribute
     {
         this.value = value;
     }
+
+    public static DWMAttribute findAttribute(int val)
+    {
+        for (DWMAttribute dwma : values())
+        {
+            if (dwma.value == val)
+            {
+                return dwma;
+            }
+        }
+        return null;
+    }
 }

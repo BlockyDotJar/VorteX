@@ -7,7 +7,7 @@ plugins {
     id("com.github.ben-manes.versions") version ("0.50.0")
     id("edu.sc.seis.launch4j") version ("3.0.5")
 
-    kotlin("jvm") version ("1.9.20")
+    kotlin("jvm") version ("1.9.21")
 }
 
 group = "dev.blocky.app.vx"
@@ -30,7 +30,7 @@ dependencies {
 
     implementation("net.java.dev.jna:jna-platform:5.13.0")
 
-    api("org.kohsuke:github-api:1.317")
+    api("org.kohsuke:github-api:1.318")
     api("org.json:json:20231013")
 
     api("net.lingala.zip4j:zip4j:2.11.5")
@@ -40,7 +40,7 @@ dependencies {
 
     api("org.controlsfx:controlsfx:11.2.0")
 
-    api("org.apache.commons:commons-lang3:3.13.0")
+    api("org.apache.commons:commons-lang3:3.14.0")
     api("commons-io:commons-io:2.15.0")
     api("commons-codec:commons-codec:1.16.0")
 }

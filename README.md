@@ -74,7 +74,7 @@ This project requires **Java 17+**
 <br>All dependencies and plugins are managed automatically by Gradle.
 
 * kotlin-stdlib
-    * Version: **v1.9.20**
+    * Version: **v1.9.21**
     * [Github](https://github.com/JetBrains/kotlin/tree/master/libraries/stdlib)
 * javafx-base (**:win**)
     * Version: **v21.0.1**
@@ -98,7 +98,7 @@ This project requires **Java 17+**
     * Version: **v5.13.0**
     * [Github](https://github.com/java-native-access/jna/tree/master/contrib/platform/src/com/sun/jna/platform)
 * github-api
-    * Version: **v1.317**
+    * Version: **v1.318**
     * [Github](https://github.com/hub4j/github-api)
 * json
     * Version: **v20231013**
@@ -116,7 +116,7 @@ This project requires **Java 17+**
     * Version: **v11.2.0**
     * [Github](https://github.com/controlsfx/controlsfx)
 * commons-lang3
-    * Version: **v3.13.0**
+    * Version: **v3.14.0**
     * [Github](https://github.com/apache/commons-lang)
 * commons-io
     * Version: **v2.15.0**
@@ -134,7 +134,7 @@ This project requires **Java 17+**
     * Version: **v3.0.5**
     * [Github](https://github.com/TheBoegl/gradle-launch4j)
 * kotlin-jvm
-    * Version: **v1.9.20**
+    * Version: **v1.9.21**
     * [Github](https://github.com/JetBrains/kotlin/tree/master/libraries/stdlib/jvm)
 
 <!--TODO: Add other used tools-->

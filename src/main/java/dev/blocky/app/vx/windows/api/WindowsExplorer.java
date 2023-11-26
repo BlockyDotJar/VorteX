@@ -17,6 +17,8 @@
  */
 package dev.blocky.app.vx.windows.api;
 
+import dev.blocky.app.vx.handler.SettingHandler;
+import dev.blocky.app.vx.handler.TrayIconHandler;
 import javafx.scene.control.TextArea;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -52,12 +54,22 @@ public class WindowsExplorer
                 if (!stackTrace.isBlank())
                 {
                     invalidAction(detailArea, writer.toString());
+
+                    if (SettingHandler.pushNotifications)
+                    {
+                        TrayIconHandler.sendErrorPushNotification(detailArea, new IllegalStateException(writer.toString()));
+                    }
                 }
             }
         }
         catch (Exception e)
         {
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
+
+            if (SettingHandler.pushNotifications)
+            {
+                TrayIconHandler.sendErrorPushNotification(detailArea, e);
+            }
         }
     }
 }

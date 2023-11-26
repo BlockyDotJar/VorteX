@@ -93,7 +93,7 @@ public class ArchiveExtractionHandler
                 extract.setDisable(false);
             });
 
-            TextField passwordUnmasked = creator.createTextField("Enter the password of the archive", 10, 220, -1, false, false, true, false);
+            TextField passwordUnmasked = creator.createTextField("Enter the password of the archive", null, 10, 220, -1, false, false, true, false);
 
             CheckBox showPassword = creator.createCheckBox("Show password", 460, 224);
 
@@ -143,6 +143,11 @@ public class ArchiveExtractionHandler
             catch (Exception e)
             {
                 invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
+
+                if (SettingHandler.pushNotifications)
+                {
+                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
+                }
             }
         });
     }
@@ -153,12 +158,6 @@ public class ArchiveExtractionHandler
         {
             try
             {
-                if (password.getText().isBlank())
-                {
-                    invalidAction(detailArea, "Please enter a password to continue.");
-                    return;
-                }
-
                 DirectoryChooser directoryChooser = creator.createDirectoryChooser("Save as...");
 
                 File extractIn = directoryChooser.showDialog(stage);
@@ -197,26 +196,39 @@ public class ArchiveExtractionHandler
 
                 fileToExtract = null;
 
-                SystemTray tray = SystemTray.getSystemTray();
+                if (SettingHandler.pushNotifications)
+                {
+                    SystemTray tray = SystemTray.getSystemTray();
 
-                Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+                    Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
 
-                TrayIcon trayIcon = new TrayIcon(image);
-                trayIcon.setImageAutoSize(true);
-                trayIcon.addActionListener((e) -> hostServices.showDocument(extractIn.getAbsolutePath()));
+                    TrayIcon trayIcon = new TrayIcon(image);
+                    trayIcon.setImageAutoSize(true);
+                    trayIcon.addActionListener((e) -> hostServices.showDocument(extractIn.getAbsolutePath()));
 
-                tray.add(trayIcon);
+                    tray.add(trayIcon);
 
-                String caption = "Successfully extracted '" + zipFile.getFile().getName() + "'";
+                    String caption = "Successfully extracted '" + zipFile.getFile().getName() + "'";
 
-                trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
+                    trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
 
-                TimeUnit.MILLISECONDS.sleep(500);
+                    TimeUnit.MILLISECONDS.sleep(500);
 
-                tray.remove(trayIcon);
+                    tray.remove(trayIcon);
+                }
+
+                if (SettingHandler.autoOpenExplorer)
+                {
+                    hostServices.showDocument(extractIn.getAbsolutePath());
+                }
             }
             catch (Exception e)
             {
+                if (SettingHandler.pushNotifications)
+                {
+                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
+                }
+
                 if (e instanceof ZipException zipE)
                 {
                     invalidAction(detailArea, zipE.getMessage() + ".");

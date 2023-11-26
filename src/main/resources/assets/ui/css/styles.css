@@ -374,6 +374,7 @@
 
 .tree-cell:selected {
     -fx-background-color: white;
+    -fx-border-color: white;
     -fx-text-fill: #333;
 }
 
@@ -381,6 +382,18 @@
     -fx-background-color: #69C2D1;
 }
 
-.toggle-switch:disabled .thumb-area:disabled {
+.toggle-switch .thumb-area {
     -fx-background-color: #fff;
+}
+
+.label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
+}
+
+.hyperlink {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #333;
 }

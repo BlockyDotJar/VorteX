@@ -20,6 +20,8 @@ package dev.blocky.app.vx.updater;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import dev.blocky.app.vx.entities.NodeCreator;
+import dev.blocky.app.vx.handler.SettingHandler;
+import dev.blocky.app.vx.handler.TrayIconHandler;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
@@ -145,6 +147,11 @@ public class ApplicationUpdater
         catch (Exception e)
         {
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
+
+            if (SettingHandler.pushNotifications)
+            {
+                TrayIconHandler.sendErrorPushNotification(detailArea, e);
+            }
         }
 
         return List.of(releaseLink, downloadLink, version);
@@ -194,6 +201,11 @@ public class ApplicationUpdater
         catch (Exception e)
         {
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
+
+            if (SettingHandler.pushNotifications)
+            {
+                TrayIconHandler.sendErrorPushNotification(detailArea, e);
+            }
         }
         return file;
     }

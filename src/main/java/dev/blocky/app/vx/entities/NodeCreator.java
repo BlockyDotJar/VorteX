@@ -55,17 +55,18 @@ public class NodeCreator
         return comboBox;
     }
 
-    public TextField createTextField(String text, double x, double y, double prefWidth, boolean managed, boolean visible, boolean editable, boolean disabled)
+    public TextField createTextField(String promptText, String text, double x, double y, double prefWidth, boolean managed, boolean visible, boolean editable, boolean disabled)
     {
         TextField textField = new TextField();
         textField.setPrefSize(prefWidth == -1 ? 425 : prefWidth, 30);
         textField.setEditable(editable);
         textField.setDisable(disabled);
-        textField.setPromptText(text);
+        textField.setPromptText(promptText);
         textField.setManaged(managed);
         textField.setVisible(visible);
         textField.setTranslateX(x);
         textField.setTranslateY(y);
+        textField.setText(text);
         return textField;
     }
 

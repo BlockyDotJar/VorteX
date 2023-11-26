@@ -68,6 +68,126 @@ public class ArchiveCreationHandler
 
     private static PopOver creationPreview;
 
+    public static void initRoot(Stage stage, AnchorPane anchorPane, TextArea detailArea)
+    {
+        anchorPane.getChildren().clear();
+
+        Button addFile = creator.createButton("Add File", 10, 10, -1, false);
+        Button addFolder = creator.createButton("Add Folder", 120, 10, -1, false);
+        Button create = creator.createButton("Create", 335, 10, -1, true);
+        Button clear = creator.createButton("Clear", 460, 10, -1, false);
+
+        PasswordField password = creator.createPasswordField("Enter a password", 10, 65);
+        PasswordField passwordCheck = creator.createPasswordField("Confirm password", 10, 105);
+
+        password.textProperty().addListener((obs, oldVal, newVal) ->
+        {
+            if (chosenFiles.isEmpty() && chosenDirectories.isEmpty())
+            {
+                create.setDisable(true);
+                return;
+            }
+
+            if (newVal.isBlank())
+            {
+                create.setDisable(true);
+                return;
+            }
+
+            if (passwordCheck.getText().isBlank())
+            {
+                create.setDisable(true);
+                return;
+            }
+
+            if (!newVal.equals(passwordCheck.getText()))
+            {
+                create.setDisable(true);
+                return;
+            }
+
+            create.setDisable(false);
+        });
+
+        passwordCheck.textProperty().addListener((obsCheck, oldValCheck, newValCheck) ->
+        {
+            if (chosenFiles.isEmpty() && chosenDirectories.isEmpty())
+            {
+                create.setDisable(true);
+                return;
+            }
+
+            if (newValCheck.isBlank())
+            {
+                create.setDisable(true);
+                return;
+            }
+
+            if (password.getText().isBlank())
+            {
+                create.setDisable(true);
+                return;
+            }
+
+            if (!password.getText().equals(newValCheck))
+            {
+                create.setDisable(true);
+                return;
+            }
+
+            create.setDisable(false);
+        });
+
+        TextField passwordUnmasked = creator.createTextField("Enter a password", null, 10, 65, -1, false, false, true, false);
+        TextField passwordCheckUnmasked = creator.createTextField("Confirm password", null, 10, 105, -1, false, false, true, false);
+
+        CheckBox showPassword = creator.createCheckBox("Show password", 460, 69);
+        CheckBox showPasswordCheck = creator.createCheckBox("Show password", 460, 109);
+
+        ObservableList<CompressionLevel> compressionLevels = FXCollections.observableArrayList
+                (
+                        CompressionLevel.NO_COMPRESSION, CompressionLevel.FASTEST, CompressionLevel.FASTER, CompressionLevel.FAST,
+                        CompressionLevel.MEDIUM_FAST, CompressionLevel.NORMAL, CompressionLevel.HIGHER, CompressionLevel.MAXIMUM,
+                        CompressionLevel.PRE_ULTRA, CompressionLevel.ULTRA
+                );
+
+        ComboBox<CompressionLevel> compressionLevel = creator.createComboBox("NORMAL", 10, 155, -1, compressionLevels, false);
+
+        TextField comment = creator.createTextField("Set comment for archive file", null, 10, 205, -1, true, true, true, false);
+
+        ObservableList<EncryptionMethod> encryptionMethods = FXCollections.observableArrayList
+                (
+                        EncryptionMethod.ZIP_STANDARD, EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG, EncryptionMethod.AES
+                );
+
+        ComboBox<EncryptionMethod> encryptionMethod = creator.createComboBox("AES", 10, 255, 80, encryptionMethods, false);
+
+        ToggleGroup aesGroup = new ToggleGroup();
+
+        RadioButton aes1 = creator.createRadioButton("AES-1", aesGroup, 10, 302);
+        RadioButton aes2 = creator.createRadioButton("AES-2", aesGroup, 100, 302);
+
+        ObservableList<AesKeyStrength> aesKeyStrengths = FXCollections.observableArrayList
+                (
+                        AesKeyStrength.KEY_STRENGTH_128, AesKeyStrength.KEY_STRENGTH_192, AesKeyStrength.KEY_STRENGTH_256
+                );
+
+        ComboBox<AesKeyStrength> aesKeyStrength = creator.createComboBox("KEY_STRENGTH_256", 10, 355, 205, aesKeyStrengths, false);
+
+        anchorPane.getChildren().addAll(addFile, addFolder, create, clear, password, passwordCheck, passwordUnmasked, passwordCheckUnmasked, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aesKeyStrength, aes1, aes2, detailArea);
+
+        initAddFile(stage, detailArea, addFile, create, password, passwordCheck);
+        initAddFolder(stage, detailArea, addFolder, create, password, passwordCheck);
+        initCreate(stage, detailArea, create, password, comment);
+        initClear(detailArea, clear, create, password, passwordCheck, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aes1, aes2, aesKeyStrength);
+        initShowPassword(showPassword, password, passwordUnmasked);
+        initShowPasswordCheck(showPasswordCheck, passwordCheck, passwordCheckUnmasked);
+        initCompressionLevel(compressionLevel);
+        initEncryptionMethod(encryptionMethod, aesKeyStrength, aes1, aes2);
+        initAESKeyStrength(aesKeyStrength);
+        initAESVersion(aesGroup, aes1);
+    }
+
     public static void initCreateArchive(Stage stage, AnchorPane anchorPane, TextArea detailArea, Button createArchive)
     {
         createArchive.setOnAction(event ->
@@ -76,122 +196,7 @@ public class ArchiveCreationHandler
             lastUsedButton = createArchive;
             createArchive.setDisable(true);
 
-            anchorPane.getChildren().clear();
-
-            Button addFile = creator.createButton("Add File", 10, 10, -1, false);
-            Button addFolder = creator.createButton("Add Folder", 120, 10, -1, false);
-            Button create = creator.createButton("Create", 335, 10, -1, true);
-            Button clear = creator.createButton("Clear", 460, 10, -1, false);
-
-            PasswordField password = creator.createPasswordField("Enter a password", 10, 65);
-            PasswordField passwordCheck = creator.createPasswordField("Confirm password", 10, 105);
-
-            password.textProperty().addListener((obs, oldVal, newVal) ->
-            {
-                if (chosenFiles.isEmpty() && chosenDirectories.isEmpty())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (newVal.isBlank())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (passwordCheck.getText().isBlank())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (!newVal.equals(passwordCheck.getText()))
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                create.setDisable(false);
-            });
-
-            passwordCheck.textProperty().addListener((obsCheck, oldValCheck, newValCheck) ->
-            {
-                if (chosenFiles.isEmpty() && chosenDirectories.isEmpty())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (newValCheck.isBlank())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (password.getText().isBlank())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (!password.getText().equals(newValCheck))
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                create.setDisable(false);
-            });
-
-            TextField passwordUnmasked = creator.createTextField("Enter a password", 10, 65, -1, false, false, true, false);
-            TextField passwordCheckUnmasked = creator.createTextField("Confirm password", 10, 105, -1, false, false, true, false);
-
-            CheckBox showPassword = creator.createCheckBox("Show password", 460, 69);
-            CheckBox showPasswordCheck = creator.createCheckBox("Show password", 460, 109);
-
-            ObservableList<CompressionLevel> compressionLevels = FXCollections.observableArrayList
-                    (
-                            CompressionLevel.NO_COMPRESSION, CompressionLevel.FASTEST, CompressionLevel.FASTER, CompressionLevel.FAST,
-                            CompressionLevel.MEDIUM_FAST, CompressionLevel.NORMAL, CompressionLevel.HIGHER, CompressionLevel.MAXIMUM,
-                            CompressionLevel.PRE_ULTRA, CompressionLevel.ULTRA
-                    );
-
-            ComboBox<CompressionLevel> compressionLevel = creator.createComboBox("NORMAL", 10, 155, -1, compressionLevels, false);
-
-            TextField comment = creator.createTextField("Set comment for archive file", 10, 205, -1, true, true, true, false);
-
-            ObservableList<EncryptionMethod> encryptionMethods = FXCollections.observableArrayList
-                    (
-                            EncryptionMethod.ZIP_STANDARD, EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG, EncryptionMethod.AES
-                    );
-
-            ComboBox<EncryptionMethod> encryptionMethod = creator.createComboBox("AES", 10, 255, 80, encryptionMethods, false);
-
-            ToggleGroup aesGroup = new ToggleGroup();
-
-            RadioButton aes1 = creator.createRadioButton("AES-1", aesGroup, 10, 302);
-            RadioButton aes2 = creator.createRadioButton("AES-2", aesGroup, 100, 302);
-
-            ObservableList<AesKeyStrength> aesKeyStrengths = FXCollections.observableArrayList
-                    (
-                            AesKeyStrength.KEY_STRENGTH_128, AesKeyStrength.KEY_STRENGTH_192, AesKeyStrength.KEY_STRENGTH_256
-                    );
-
-            ComboBox<AesKeyStrength> aesKeyStrength = creator.createComboBox("KEY_STRENGTH_256", 10, 355, 205, aesKeyStrengths, false);
-
-            anchorPane.getChildren().addAll(addFile, addFolder, create, clear, password, passwordCheck, passwordUnmasked, passwordCheckUnmasked, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aesKeyStrength, aes1, aes2, detailArea);
-
-            initAddFile(stage, detailArea, addFile, create, password, passwordCheck);
-            initAddFolder(stage, detailArea, addFolder, create, password, passwordCheck);
-            initCreate(stage, detailArea, create, password, comment);
-            initClear(detailArea, clear, create, password, passwordCheck, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aes1, aes2, aesKeyStrength);
-            initShowPassword(showPassword, password, passwordUnmasked);
-            initShowPasswordCheck(showPasswordCheck, passwordCheck, passwordCheckUnmasked);
-            initCompressionLevel(compressionLevel);
-            initEncryptionMethod(encryptionMethod, aesKeyStrength, aes1, aes2);
-            initAESKeyStrength(aesKeyStrength);
-            initAESVersion(aesGroup, aes1);
+            initRoot(stage, anchorPane, detailArea);
         });
     }
 
@@ -236,6 +241,11 @@ public class ArchiveCreationHandler
             catch (Exception e)
             {
                 invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
+
+                if (SettingHandler.pushNotifications)
+                {
+                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
+                }
             }
         });
     }
@@ -276,6 +286,11 @@ public class ArchiveCreationHandler
             catch (Exception e)
             {
                 invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
+
+                if (SettingHandler.pushNotifications)
+                {
+                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
+                }
             }
         });
     }
@@ -360,27 +375,40 @@ public class ArchiveCreationHandler
                 chosenFiles.clear();
                 chosenDirectories.clear();
 
-                SystemTray tray = SystemTray.getSystemTray();
+                if (SettingHandler.pushNotifications)
+                {
+                    SystemTray tray = SystemTray.getSystemTray();
 
-                Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+                    Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
 
-                TrayIcon trayIcon = new TrayIcon(image);
-                trayIcon.setImageAutoSize(true);
-                trayIcon.addActionListener((e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, zipFile.getFile()));
+                    TrayIcon trayIcon = new TrayIcon(image);
+                    trayIcon.setImageAutoSize(true);
+                    trayIcon.addActionListener((e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, zipFile.getFile()));
 
-                tray.add(trayIcon);
+                    tray.add(trayIcon);
 
-                String caption = "Successfully created '" + zipFile.getFile().getName() + "'";
+                    String caption = "Successfully created '" + zipFile.getFile().getName() + "'";
 
-                trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
+                    trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
 
-                TimeUnit.MILLISECONDS.sleep(500);
+                    TimeUnit.MILLISECONDS.sleep(500);
 
-                tray.remove(trayIcon);
+                    tray.remove(trayIcon);
+                }
+
+                if (SettingHandler.autoOpenExplorer)
+                {
+                    WindowsExplorer.openDirectoryAndHighlightFile(detailArea, zipFile.getFile());
+                }
             }
             catch (Exception e)
             {
                 invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
+
+                if (SettingHandler.pushNotifications)
+                {
+                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
+                }
             }
         });
     }
@@ -570,7 +598,7 @@ public class ArchiveCreationHandler
 
     public static void initCompressionLevel(ComboBox<CompressionLevel> compressionLevel)
     {
-        compressionLevel.setOnAction(event -> cpl = compressionLevel.getValue());
+        compressionLevel.setOnAction(e -> cpl = compressionLevel.getValue());
     }
 
     public static void initEncryptionMethod(ComboBox<EncryptionMethod> encryptionMethod, ComboBox<AesKeyStrength> keyStrength, RadioButton aes1, RadioButton aes2)

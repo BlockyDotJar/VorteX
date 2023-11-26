@@ -77,7 +77,7 @@ public class BarcodeCreationHandler
             Button generateBarcode = creator.createButton("Generate", 10, 250, 100, true);
             Button clear = creator.createButton("Clear", 500, 250, 90, false);
 
-            TextField barcodeInput = creator.createTextField("Enter the input for the barcode", 10, 300, 380, true, true, true, false);
+            TextField barcodeInput = creator.createTextField("Enter the input for the barcode", null, 10, 300, 380, true, true, true, false);
 
             barcodeInput.textProperty().addListener((obs, oldVal, newVal) ->
             {
@@ -90,11 +90,11 @@ public class BarcodeCreationHandler
                 generateBarcode.setDisable(false);
             });
 
-            TextField width = creator.createTextField("Width", 400, 300, 90, true, true, true, false);
-            width.textProperty().addListener(createChangeListener(width));
+            TextField width = creator.createTextField("Width", null, 400, 300, 90, true, true, true, false);
+            width.textProperty().addListener(createTextFieldChangeListener(width));
 
-            TextField height = creator.createTextField("Height", 500, 300, 90, true, true, true, false);
-            height.textProperty().addListener(createChangeListener(height));
+            TextField height = creator.createTextField("Height", null, 500, 300, 90, true, true, true, false);
+            height.textProperty().addListener(createTextFieldChangeListener(height));
 
             ObservableList<BarcodeFormat> barcodeFormats = FXCollections.observableArrayList
                     (
@@ -229,6 +229,11 @@ public class BarcodeCreationHandler
             }
             catch (Exception e)
             {
+                if (SettingHandler.pushNotifications)
+                {
+                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
+                }
+
                 if (e instanceof IllegalArgumentException)
                 {
                     invalidAction(detailArea, e.getMessage() + ".");
@@ -300,23 +305,31 @@ public class BarcodeCreationHandler
 
                         validAction(detailArea, text);
 
-                        SystemTray tray = SystemTray.getSystemTray();
+                        if (SettingHandler.pushNotifications)
+                        {
+                            SystemTray tray = SystemTray.getSystemTray();
 
-                        java.awt.Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+                            java.awt.Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
 
-                        TrayIcon trayIcon = new TrayIcon(image);
-                        trayIcon.setImageAutoSize(true);
-                        trayIcon.addActionListener((e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, file));
+                            TrayIcon trayIcon = new TrayIcon(image);
+                            trayIcon.setImageAutoSize(true);
+                            trayIcon.addActionListener((e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, file));
 
-                        tray.add(trayIcon);
+                            tray.add(trayIcon);
 
-                        String caption = "Successfully created barcode '" + file.getName() + "'";
+                            String caption = "Successfully created barcode '" + file.getName() + "'";
 
-                        trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
+                            trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
 
-                        TimeUnit.MILLISECONDS.sleep(500);
+                            TimeUnit.MILLISECONDS.sleep(500);
 
-                        tray.remove(trayIcon);
+                            tray.remove(trayIcon);
+                        }
+
+                        if (SettingHandler.autoOpenExplorer)
+                        {
+                            WindowsExplorer.openDirectoryAndHighlightFile(detailArea, file);
+                        }
                     }
                     catch (Exception e)
                     {
@@ -364,6 +377,11 @@ public class BarcodeCreationHandler
                     catch (Exception e)
                     {
                         invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
+
+                        if (SettingHandler.pushNotifications)
+                        {
+                            TrayIconHandler.sendErrorPushNotification(detailArea, e);
+                        }
                     }
                 }
         );
@@ -393,7 +411,7 @@ public class BarcodeCreationHandler
         });
     }
 
-    private static ChangeListener<? super String> createChangeListener(TextField textField)
+    private static ChangeListener<? super String> createTextFieldChangeListener(TextField textField)
     {
         return (obs, oldVal, newVal) ->
         {

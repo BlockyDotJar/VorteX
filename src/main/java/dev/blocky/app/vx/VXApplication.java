@@ -20,14 +20,13 @@ package dev.blocky.app.vx;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import dev.blocky.app.vx.entities.NodeCreator;
+import dev.blocky.app.vx.handler.SettingHandler;
 import dev.blocky.app.vx.updater.ApplicationUpdater;
 import dev.blocky.app.vx.windows.api.dwm.DWMAttribute;
-import dev.blocky.app.vx.windows.api.dwm.DWMWindow;
+import dev.blocky.app.vx.windows.api.dwm.DWMHandler;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Worker;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
@@ -40,18 +39,17 @@ import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import net.lingala.zip4j.model.enums.AesKeyStrength;
-import net.lingala.zip4j.model.enums.CompressionLevel;
-import net.lingala.zip4j.model.enums.EncryptionMethod;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.controlsfx.control.HiddenSidesPane;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 
 import static dev.blocky.app.vx.handler.ActionHandler.lastUsedButton;
@@ -60,7 +58,7 @@ import static dev.blocky.app.vx.handler.ArchiveExtractionHandler.initExtractArch
 import static dev.blocky.app.vx.handler.ArchiveOpeningHandler.initOpenArchive;
 import static dev.blocky.app.vx.handler.BarcodeCreationHandler.initCreateBarcode;
 import static dev.blocky.app.vx.handler.BarcodeReadingHandler.initReadBarcode;
-import static dev.blocky.app.vx.handler.SettingHandler.initSettings;
+import static dev.blocky.app.vx.handler.SettingHandler.*;
 
 public class VXApplication extends Application
 {
@@ -127,123 +125,9 @@ public class VXApplication extends Application
 
         if (args.length == 0)
         {
-            Button addFile = creator.createButton("Add File", 10, 10, -1, false);
-            Button addFolder = creator.createButton("Add Folder", 120, 10, -1, false);
-            Button create = creator.createButton("Create", 335, 10, -1, true);
-            Button clear = creator.createButton("Clear", 460, 10, -1, false);
-
-            PasswordField password = creator.createPasswordField("Enter a password", 10, 65);
-            PasswordField passwordCheck = creator.createPasswordField("Confirm password", 10, 105);
-
-            password.textProperty().addListener((obs, oldVal, newVal) ->
-            {
-                if (chosenFiles.isEmpty() && chosenDirectories.isEmpty())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (newVal.isBlank())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (passwordCheck.getText().isBlank())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (!newVal.equals(passwordCheck.getText()))
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                create.setDisable(false);
-            });
-
-            passwordCheck.textProperty().addListener((obsCheck, oldValCheck, newValCheck) ->
-            {
-                if (chosenFiles.isEmpty() && chosenDirectories.isEmpty())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (newValCheck.isBlank())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (password.getText().isBlank())
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                if (!password.getText().equals(newValCheck))
-                {
-                    create.setDisable(true);
-                    return;
-                }
-
-                create.setDisable(false);
-            });
-
-            TextField passwordUnmasked = creator.createTextField("Enter a password", 10, 65, -1, false, false, true, false);
-            TextField passwordCheckUnmasked = creator.createTextField("Confirm password", 10, 105, -1, false, false, true, false);
-
-            CheckBox showPassword = creator.createCheckBox("Show password", 460, 69);
-            CheckBox showPasswordCheck = creator.createCheckBox("Show password", 460, 109);
-
-            ObservableList<CompressionLevel> compressionLevels = FXCollections.observableArrayList
-                    (
-                            CompressionLevel.NO_COMPRESSION, CompressionLevel.FASTEST, CompressionLevel.FASTER, CompressionLevel.FAST,
-                            CompressionLevel.MEDIUM_FAST, CompressionLevel.NORMAL, CompressionLevel.HIGHER, CompressionLevel.MAXIMUM,
-                            CompressionLevel.PRE_ULTRA, CompressionLevel.ULTRA
-                    );
-
-            ComboBox<CompressionLevel> compressionLevel = creator.createComboBox("NORMAL", 10, 155, -1, compressionLevels, false);
-
-            TextField comment = creator.createTextField("Set comment for archive file", 10, 205, -1, true, true, true, false);
-
-            ObservableList<EncryptionMethod> encryptionMethods = FXCollections.observableArrayList
-                    (
-                            EncryptionMethod.ZIP_STANDARD, EncryptionMethod.ZIP_STANDARD_VARIANT_STRONG, EncryptionMethod.AES
-                    );
-
-            ComboBox<EncryptionMethod> encryptionMethod = creator.createComboBox("AES", 10, 255, 80, encryptionMethods, false);
-
-            ToggleGroup aesGroup = new ToggleGroup();
-
-            RadioButton aes1 = creator.createRadioButton("AES-1", aesGroup, 10, 302);
-            RadioButton aes2 = creator.createRadioButton("AES-2", aesGroup, 100, 302);
-
-            ObservableList<AesKeyStrength> aesKeyStrengths = FXCollections.observableArrayList
-                    (
-                            AesKeyStrength.KEY_STRENGTH_128, AesKeyStrength.KEY_STRENGTH_192, AesKeyStrength.KEY_STRENGTH_256
-                    );
-
-            ComboBox<AesKeyStrength> aesKeyStrength = creator.createComboBox("KEY_STRENGTH_256", 10, 355, 205, aesKeyStrengths, false);
-
-            anchorPane.getChildren().addAll(addFile, addFolder, create, clear, password, passwordCheck, passwordUnmasked, passwordCheckUnmasked, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aesKeyStrength, aes1, aes2, detailArea);
-
-            initAddFile(stage, detailArea, addFile, create, password, passwordCheck);
-            initAddFolder(stage, detailArea, addFolder, create, password, passwordCheck);
-            initCreate(stage, detailArea, create, password, comment);
-            initClear(detailArea, clear, create, password, passwordCheck, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aes1, aes2, aesKeyStrength);
-            initShowPassword(showPassword, password, passwordUnmasked);
-            initShowPasswordCheck(showPasswordCheck, passwordCheck, passwordCheckUnmasked);
-            initCompressionLevel(compressionLevel);
-            initEncryptionMethod(encryptionMethod, aesKeyStrength, aes1, aes2);
-            initAESKeyStrength(aesKeyStrength);
-            initAESVersion(aesGroup, aes1);
-
             createArchive = creator.createButton("Create Archive", 10, 10, 125, true);
             lastUsedButton = createArchive;
+            initRoot(stage, anchorPane, detailArea);
         }
 
         if (args.length == 1)
@@ -257,7 +141,7 @@ public class VXApplication extends Application
                 String contentText = String.format(
                         """
                                 A weird error occurred on application start.
-                                                                
+
                                 Here are some parameter that can help you finding the issue:
                                 > file.exists = %b
                                 > file.isFile = %b
@@ -295,11 +179,43 @@ public class VXApplication extends Application
 
         Image icon = new Image(getClass().getResource("/assets/icons/icon.png").openStream());
 
-        // TODO: dark alert style
-        // TODO: Better Scene handling
+        String vortexHome = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\VorteX", "VorteX_HOME");
+        File settingsFile = new File(vortexHome + "\\settings.json");
+        String jsonInput = Files.readString(settingsFile.toPath());
+
+        String cssFile = "styles";
+
+        JSONObject root = new JSONObject(jsonInput);
+
+        boolean defaultDarkMode = root.getBoolean("default-dark-mode");
+
+        JSONObject dwm = root.getJSONObject("dwm");
+
+        int windowType = dwm.getInt("window-type");
+        boolean immersiveDarkMode = dwm.getBoolean("immersive-dark-mode");
+
+        if (windowType == 1 && !defaultDarkMode)
+        {
+            cssFile = "styles";
+        }
+
+        if (windowType == 1 && defaultDarkMode)
+        {
+            cssFile = "dark-styles";
+        }
+
+        if ((windowType == 2 || windowType == 4) && !immersiveDarkMode)
+        {
+            cssFile = "dwm-styles";
+        }
+
+        if ((windowType == 2 || windowType == 4) && immersiveDarkMode)
+        {
+            cssFile = "dwm-dark-styles";
+        }
 
         Scene scene = new Scene(hiddenSidesPane, 605, 525);
-        scene.getStylesheets().add(getClass().getResource("/assets/ui/css/dark-styles.css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/assets/ui/css/" + cssFile + ".css").toExternalForm());
         scene.setFill(Color.TRANSPARENT);
 
         stage.setScene(scene);
@@ -315,84 +231,124 @@ public class VXApplication extends Application
         initCreateBarcode(stage, anchorPane, detailArea, createBarcode);
         initReadBarcode(stage, anchorPane, detailArea, readBarcode);
 
-        initSettings(anchorPane, detailArea, settings);
-
         String script = IOUtils.toString(getClass().getResource("/assets/scripts/webEngine.js"), StandardCharsets.UTF_8);
+
+        initSettings(hostServices, scene, anchorPane, detailArea, script, settings);
 
         Platform.runLater(() ->
         {
-            // TODO: let user choose between DWMSBT_MAINWINDOW and DWMSBT_TABBEDWINDOW
-
             String displayVersion = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion");
             int dvNumber = Integer.parseInt(StringUtils.remove(displayVersion, "H"));
 
             if (SystemUtils.IS_OS_WINDOWS_11 && dvNumber >= 222)
             {
-                scene.getStylesheets().add(getClass().getResource("/assets/ui/css/dwm-styles.css").toExternalForm());
+                if (windowType == 2 || windowType == 4)
+                {
+                    DWMAttribute dwma = DWMAttribute.findAttribute(windowType);
+                    DWMHandler.setMicaMaterial(dwma, immersiveDarkMode);
+                }
 
-                DWMWindow.setMicaMaterial(stage.getTitle(), DWMAttribute.DWMSBT_MAINWINDOW, true);
-            }
+                DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle("VorteX");
+
+                JSONObject caption = dwm.getJSONObject("caption");
+
+                int rCaptionInt = caption.getInt("r");
+                int gCaptionInt = caption.getInt("g");
+                int bCaptionInt = caption.getInt("b");
+
+                if (rCaptionInt != -1 && gCaptionInt != -1 && bCaptionInt != -1)
+                {
+                    DWMHandler.setCaptionColor(handle, Color.rgb(rCaptionInt, gCaptionInt, bCaptionInt));
+                }
+
+                JSONObject text = dwm.getJSONObject("text");
+
+                int rTextInt = text.getInt("r");
+                int gTextInt = text.getInt("g");
+                int bTextInt = text.getInt("b");
+
+                if (rTextInt != -1 && gTextInt != -1 && bTextInt != -1)
+                {
+                    DWMHandler.setTextColor(handle, Color.rgb(rTextInt, gTextInt, bTextInt));
+                }
+
+                JSONObject border = dwm.getJSONObject("border");
+
+                int rBorderInt = border.getInt("r");
+                int gBorderInt = border.getInt("g");
+                int bBorderInt = border.getInt("b");
+
+                if (rBorderInt != -1 && gBorderInt != -1 && bBorderInt != -1)
+                {
+                    DWMHandler.setBorderColor(handle, Color.rgb(rBorderInt, gBorderInt, bBorderInt));
+                }
+           }
 
             new Thread(() ->
-            {
-                ApplicationUpdater updater = new ApplicationUpdater();
-                List<String> versionDetails = updater.newVersion(detailArea);
-
-                if (!versionDetails.isEmpty())
-                {
-                    String version = versionDetails.get(2);
-                    String releaseLink = versionDetails.get(0);
-
-                    AnchorPane alertPane = new AnchorPane();
-                    alertPane.setMinSize(705, 435);
-                    alertPane.setMaxSize(705, 435);
-
-                    String text = "Version " + version + " is here! Do you want to install the newest version of VorteX?";
-
-                    Label label = creator.createLabel(text, 4, 0);
-                    Hyperlink hyperlink = creator.createHyperlink(hostServices, "Read here about the new version.", releaseLink, 0, 15);
-
-                    WebView webView = creator.createWebView(20, 40);
-                    WebEngine webEngine = webView.getEngine();
-                    webEngine.load(releaseLink);
-
-                    alertPane.getChildren().addAll(label, hyperlink, webView);
-
-                    String title = "New VorteX version available!";
-                    String headerText = "Looks like there is a new version of VorteX (" + version + ") available!";
-
-                    Alert updateAlert = creator.createAlert(Alert.AlertType.CONFIRMATION, title, headerText, alertPane);
-
-                    ButtonType downloadButton = new ButtonType("Download", ButtonBar.ButtonData.OK_DONE);
-                    updateAlert.getButtonTypes().setAll(downloadButton, ButtonType.CANCEL);
-
-                    webEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
+                    Platform.runLater(() ->
                     {
-                        if (newValue == Worker.State.SCHEDULED)
+                        if (SettingHandler.updateCheck)
                         {
-                            webView.setVisible(false);
-                        }
+                            ApplicationUpdater updater = new ApplicationUpdater();
+                            List<String> versionDetails = updater.newVersion(detailArea);
 
-                        if (newValue == Worker.State.SUCCEEDED)
-                        {
-                            webEngine.executeScript(script);
-
-                            webView.setVisible(true);
-
-                            if (!updateAlert.isShowing())
+                            if (!versionDetails.isEmpty())
                             {
-                                updateAlert.showAndWait().ifPresent((bt) ->
+                                String version = versionDetails.get(2);
+                                String releaseLink = versionDetails.get(0);
+
+                                AnchorPane alertPane = new AnchorPane();
+                                alertPane.setMinSize(705, 435);
+                                alertPane.setMaxSize(705, 435);
+
+                                String text = "Version " + version + " is here! Do you want to install the newest version of VorteX?";
+
+                                Label label = creator.createLabel(text, 20, 0);
+                                Hyperlink hyperlink = creator.createHyperlink(hostServices, "Read here about the new version.", releaseLink, 16, 15);
+
+                                WebView webView = creator.createWebView(20, 40);
+                                WebEngine webEngine = webView.getEngine();
+                                webEngine.load(releaseLink);
+
+                                alertPane.getChildren().addAll(label, hyperlink, webView);
+
+                                String title = "New VorteX version available!";
+                                String headerText = "Looks like there is a new version of VorteX (" + version + ") available!";
+
+                                Alert updateAlert = creator.createAlert(Alert.AlertType.CONFIRMATION, title, headerText, alertPane);
+
+                                ButtonType downloadButton = new ButtonType("Download", ButtonBar.ButtonData.OK_DONE);
+                                updateAlert.getButtonTypes().setAll(downloadButton, ButtonType.CANCEL);
+
+                                webEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
                                 {
-                                    if (bt.getButtonData() == ButtonBar.ButtonData.OK_DONE)
+                                    if (newValue == Worker.State.SCHEDULED)
                                     {
-                                        updater.startDownloadTask(hostServices, creator, detailArea, versionDetails);
+                                        webView.setVisible(false);
+                                    }
+
+                                    if (newValue == Worker.State.SUCCEEDED)
+                                    {
+                                        webEngine.executeScript(script);
+
+                                        webView.setVisible(true);
+
+                                        if (!updateAlert.isShowing())
+                                        {
+                                            updateAlert.showAndWait().ifPresent((bt) ->
+                                            {
+                                                if (bt.getButtonData() == ButtonBar.ButtonData.OK_DONE)
+                                                {
+                                                    updater.startDownloadTask(hostServices, creator, detailArea, versionDetails);
+                                                }
+                                            });
+                                        }
                                     }
                                 });
                             }
                         }
-                    });
-                }
-            }).start();
+                    })
+            ).start();
         });
     }
 

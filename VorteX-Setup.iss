@@ -8,9 +8,6 @@ OutputDir="D:\VorteX-Builds"
 OutputBaseFilename=VorteX-Setup-{#SetupSetting('AppVersion')}
 ChangesAssociations=yes
 
-[UninstallDelete]
-Type: files; Name: "{app}\properties.json"; Flags: uninsneveruninstall
-
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\update"
 

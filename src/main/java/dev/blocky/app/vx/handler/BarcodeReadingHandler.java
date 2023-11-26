@@ -63,7 +63,7 @@ public class BarcodeReadingHandler
 
             anchorPane.getChildren().clear();
 
-            TextField barcodeOutput = creator.createTextField("Choose a barcode image to get the output", 10, 300, 585, true, true, false, false);
+            TextField barcodeOutput = creator.createTextField("Choose a barcode image to get the output", null, 10, 300, 585, true, true, false, false);
 
             Button chooseBarcodeImage = creator.createButton("Choose barcode image", 10, 250, 200, false);
             Button clear = creator.createButton("Clear", 500, 250, 90, false);
@@ -155,6 +155,11 @@ public class BarcodeReadingHandler
             }
             catch (Exception e)
             {
+                if (SettingHandler.pushNotifications)
+                {
+                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
+                }
+
                 if (e instanceof NotFoundException)
                 {
                     invalidAction(detailArea, "No barcode found in image, invalid barcode provided or wrong barcode format selected.");
