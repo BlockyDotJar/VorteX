@@ -388,22 +388,20 @@ public class SettingHandler
     public static void initCheckForUpdates(HostServices hostServices, TextArea detailArea, String script, Button checkForUpdates)
     {
         checkForUpdates.setOnAction(e ->
-                new Thread(() ->
-                        Platform.runLater(() ->
-                        {
-                            if (initApplicationUpdater(hostServices, detailArea, script))
-                            {
-                                return;
-                            }
+                Platform.runLater(() ->
+                {
+                    if (initApplicationUpdater(hostServices, detailArea, script))
+                    {
+                        return;
+                    }
 
-                            String title = "No new VorteX version available.";
-                            String headerText = "Looks like there is a no new version of VorteX available.";
-                            String contextText = "The latest version of VorteX is already installed...";
+                    String title = "No new VorteX version available.";
+                    String headerText = "Looks like there is a no new version of VorteX available.";
+                    String contextText = "The latest version of VorteX is already installed...";
 
-                            Alert updateAlert = creator.createAlert(Alert.AlertType.INFORMATION, title, headerText, contextText);
-                            updateAlert.show();
-                        })
-                ).start()
+                    Alert updateAlert = creator.createAlert(Alert.AlertType.INFORMATION, title, headerText, contextText);
+                    updateAlert.show();
+                })
         );
     }
 
