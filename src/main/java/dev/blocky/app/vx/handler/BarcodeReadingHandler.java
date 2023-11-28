@@ -45,6 +45,7 @@ import java.util.List;
 
 import static dev.blocky.app.vx.handler.ActionHandler.*;
 import static dev.blocky.app.vx.handler.BarcodeCreationHandler.initBarcodeFormat;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
 
 public class BarcodeReadingHandler
 {
@@ -155,10 +156,7 @@ public class BarcodeReadingHandler
             }
             catch (Exception e)
             {
-                if (SettingHandler.pushNotifications)
-                {
-                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
-                }
+                sendErrorPushNotification(detailArea, e);
 
                 if (e instanceof NotFoundException)
                 {

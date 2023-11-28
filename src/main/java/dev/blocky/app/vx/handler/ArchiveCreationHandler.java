@@ -50,10 +50,12 @@ import java.awt.*;
 import java.io.File;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static dev.blocky.app.vx.handler.ActionHandler.*;
+import static dev.blocky.app.vx.handler.SettingHandler.autoOpenExplorer;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendPushNotification;
 
 public class ArchiveCreationHandler
 {
@@ -68,7 +70,7 @@ public class ArchiveCreationHandler
 
     private static PopOver creationPreview;
 
-    public static void initRoot(Stage stage, AnchorPane anchorPane, TextArea detailArea)
+    public static void initRoot(Stage stage, AnchorPane anchorPane, TextArea detailArea, Button createArchive)
     {
         anchorPane.getChildren().clear();
 
@@ -178,8 +180,8 @@ public class ArchiveCreationHandler
 
         initAddFile(stage, detailArea, addFile, create, password, passwordCheck);
         initAddFolder(stage, detailArea, addFolder, create, password, passwordCheck);
-        initCreate(stage, detailArea, create, password, comment);
-        initClear(detailArea, clear, create, password, passwordCheck, showPassword, showPasswordCheck, compressionLevel, comment, encryptionMethod, aes1, aes2, aesKeyStrength);
+        initCreate(stage, anchorPane, detailArea, createArchive, create, password, comment);
+        initClear(stage, anchorPane, detailArea, createArchive, clear);
         initShowPassword(showPassword, password, passwordUnmasked);
         initShowPasswordCheck(showPasswordCheck, passwordCheck, passwordCheckUnmasked);
         initCompressionLevel(compressionLevel);
@@ -196,7 +198,7 @@ public class ArchiveCreationHandler
             lastUsedButton = createArchive;
             createArchive.setDisable(true);
 
-            initRoot(stage, anchorPane, detailArea);
+            initRoot(stage, anchorPane, detailArea, createArchive);
         });
     }
 
@@ -241,11 +243,7 @@ public class ArchiveCreationHandler
             catch (Exception e)
             {
                 invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-                if (SettingHandler.pushNotifications)
-                {
-                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
-                }
+                sendErrorPushNotification(detailArea, e);
             }
         });
     }
@@ -286,16 +284,12 @@ public class ArchiveCreationHandler
             catch (Exception e)
             {
                 invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-                if (SettingHandler.pushNotifications)
-                {
-                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
-                }
+                sendErrorPushNotification(detailArea, e);
             }
         });
     }
 
-    public static void initCreate(Stage stage, TextArea detailArea, Button create, PasswordField password, TextField comment)
+    public static void initCreate(Stage stage, AnchorPane anchorPane, TextArea detailArea, Button createArchive, Button create, PasswordField password, TextField comment)
     {
         create.setOnAction(event ->
         {
@@ -370,33 +364,13 @@ public class ArchiveCreationHandler
 
                 validAction(detailArea, text);
 
-                create.setDisable(true);
+                reset(stage, anchorPane, detailArea, createArchive);
 
-                chosenFiles.clear();
-                chosenDirectories.clear();
+                String caption = "Successfully created '" + zipFile.getFile().getName() + "'";
 
-                if (SettingHandler.pushNotifications)
-                {
-                    SystemTray tray = SystemTray.getSystemTray();
+                sendPushNotification(detailArea, (e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, zipFile.getFile()), TrayIcon.MessageType.INFO, caption, text);
 
-                    Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
-
-                    TrayIcon trayIcon = new TrayIcon(image);
-                    trayIcon.setImageAutoSize(true);
-                    trayIcon.addActionListener((e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, zipFile.getFile()));
-
-                    tray.add(trayIcon);
-
-                    String caption = "Successfully created '" + zipFile.getFile().getName() + "'";
-
-                    trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
-
-                    TimeUnit.MILLISECONDS.sleep(500);
-
-                    tray.remove(trayIcon);
-                }
-
-                if (SettingHandler.autoOpenExplorer)
+                if (autoOpenExplorer)
                 {
                     WindowsExplorer.openDirectoryAndHighlightFile(detailArea, zipFile.getFile());
                 }
@@ -404,11 +378,7 @@ public class ArchiveCreationHandler
             catch (Exception e)
             {
                 invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-                if (SettingHandler.pushNotifications)
-                {
-                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
-                }
+                sendErrorPushNotification(detailArea, e);
             }
         });
     }
@@ -655,35 +625,16 @@ public class ArchiveCreationHandler
         aesKeyStrength.setOnAction(event -> aesks = aesKeyStrength.getValue());
     }
 
-    public static void initClear(TextArea detailArea, Button clear, Button create, PasswordField password, PasswordField passwordCheck,
-                                 CheckBox showPassword, CheckBox showPasswordCheck, ComboBox<CompressionLevel> compressionLevel, TextField comment,
-                                 ComboBox<EncryptionMethod> encryptionMethod, RadioButton aes1, RadioButton aes2, ComboBox<AesKeyStrength> aesKeyStrength)
+    public static void initClear(Stage stage, AnchorPane anchorPane, TextArea detailArea, Button createArchive, Button clear)
     {
-        clear.setOnAction(event ->
-        {
-            detailArea.clear();
+        clear.setOnAction(event -> reset(stage, anchorPane, detailArea, createArchive));
+    }
 
-            create.setDisable(true);
+    private static void reset(Stage stage, AnchorPane anchorPane, TextArea detailArea, Button createArchive)
+    {
+        chosenFiles.clear();
+        chosenDirectories.clear();
 
-            password.clear();
-            passwordCheck.clear();
-
-            showPassword.setSelected(false);
-            showPasswordCheck.setSelected(false);
-
-            compressionLevel.getSelectionModel().clearAndSelect(5);
-
-            comment.clear();
-
-            encryptionMethod.getSelectionModel().clearAndSelect(2);
-
-            aes1.setSelected(false);
-            aes2.setSelected(true);
-
-            aesKeyStrength.getSelectionModel().clearAndSelect(2);
-
-            chosenFiles.clear();
-            chosenDirectories.clear();
-        });
+        initRoot(stage, anchorPane, detailArea, createArchive);
     }
 }

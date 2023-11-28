@@ -20,13 +20,14 @@ package dev.blocky.app.vx.updater;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import dev.blocky.app.vx.entities.NodeCreator;
-import dev.blocky.app.vx.handler.SettingHandler;
-import dev.blocky.app.vx.handler.TrayIconHandler;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TextArea;
+import javafx.concurrent.Worker;
+import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.web.WebEngine;
+import javafx.scene.web.WebView;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.kohsuke.github.*;
@@ -37,15 +38,16 @@ import java.util.Comparator;
 import java.util.List;
 
 import static dev.blocky.app.vx.handler.ActionHandler.invalidAction;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
 
 public class ApplicationUpdater
 {
-    public String getCurrentVersion()
+    private static String getCurrentVersion()
     {
         return Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\VorteX", "VorteX_Version");
     }
 
-    private boolean isOlderVersion(String currentVersion, String latestVersion)
+    private static boolean isOlderVersion(String currentVersion, String latestVersion)
     {
         Comparator<String> versionComparator = Comparator
                 .comparing(s -> s, (cv, lv) ->
@@ -68,7 +70,7 @@ public class ApplicationUpdater
         return versionComparator.compare(currentVersion, latestVersion) >= 0;
     }
 
-    public List<String> newVersion(TextArea detailArea)
+    private static List<String> getLatestVersion(TextArea detailArea)
     {
         String version = null;
         String releaseLink = null;
@@ -147,17 +149,13 @@ public class ApplicationUpdater
         catch (Exception e)
         {
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-            if (SettingHandler.pushNotifications)
-            {
-                TrayIconHandler.sendErrorPushNotification(detailArea, e);
-            }
+            sendErrorPushNotification(detailArea, e);
         }
 
         return List.of(releaseLink, downloadLink, version);
     }
 
-    public File downloadAndInstallFile(TextArea detailArea, List<String> versionData)
+    private static File downloadAndInstallFile(TextArea detailArea, List<String> versionData)
     {
         File file = null;
 
@@ -201,16 +199,12 @@ public class ApplicationUpdater
         catch (Exception e)
         {
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-            if (SettingHandler.pushNotifications)
-            {
-                TrayIconHandler.sendErrorPushNotification(detailArea, e);
-            }
+            sendErrorPushNotification(detailArea, e);
         }
         return file;
     }
 
-    public void startDownloadTask(HostServices hostServices, NodeCreator creator, TextArea detailArea, List<String> versionDetails)
+    private static void startDownloadTask(HostServices hostServices, NodeCreator creator, TextArea detailArea, List<String> versionDetails)
     {
         final File[] installer = {null};
 
@@ -242,5 +236,68 @@ public class ApplicationUpdater
         );
 
         new Thread(backgroundTask).start();
+    }
+
+    public static boolean initApplicationUpdater(HostServices hostServices, TextArea detailArea, String script)
+    {
+        NodeCreator creator = new NodeCreator();
+        List<String> versionDetails = getLatestVersion(detailArea);
+
+        if (!versionDetails.isEmpty())
+        {
+            String version = versionDetails.get(2);
+            String releaseLink = versionDetails.get(0);
+
+            AnchorPane alertPane = new AnchorPane();
+            alertPane.setMinSize(705, 435);
+            alertPane.setMaxSize(705, 435);
+
+            String text = "Version " + version + " is here! Do you want to install the newest version of VorteX?";
+
+            Label label = creator.createLabel(text, 20, 0);
+            Hyperlink hyperlink = creator.createHyperlink(hostServices, "Read here about the new version.", releaseLink, 16, 15);
+
+            WebView webView = creator.createWebView(20, 40);
+            WebEngine webEngine = webView.getEngine();
+            webEngine.load(releaseLink);
+
+            alertPane.getChildren().addAll(label, hyperlink, webView);
+
+            String title = "New VorteX version available!";
+            String headerText = "Looks like there is a new version of VorteX (" + version + ") available!";
+
+            Alert updateAlert = creator.createAlert(Alert.AlertType.CONFIRMATION, title, headerText, alertPane);
+
+            ButtonType downloadButton = new ButtonType("Download", ButtonBar.ButtonData.OK_DONE);
+            updateAlert.getButtonTypes().setAll(downloadButton, ButtonType.CANCEL);
+
+            webEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
+            {
+                if (newValue == Worker.State.SCHEDULED)
+                {
+                    webView.setVisible(false);
+                }
+
+                if (newValue == Worker.State.SUCCEEDED)
+                {
+                    webEngine.executeScript(script);
+
+                    webView.setVisible(true);
+
+                    if (!updateAlert.isShowing())
+                    {
+                        updateAlert.showAndWait().ifPresent((bt) ->
+                        {
+                            if (bt.getButtonData() == ButtonBar.ButtonData.OK_DONE)
+                            {
+                                startDownloadTask(hostServices, creator, detailArea, versionDetails);
+                            }
+                        });
+                    }
+                }
+            });
+            return true;
+        }
+        return false;
     }
 }

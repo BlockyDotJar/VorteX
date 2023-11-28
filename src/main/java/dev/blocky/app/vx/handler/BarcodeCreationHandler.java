@@ -29,11 +29,11 @@ import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
@@ -51,11 +51,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static dev.blocky.app.vx.handler.ActionHandler.*;
+import static dev.blocky.app.vx.handler.SettingHandler.autoOpenExplorer;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendPushNotification;
 
 public class BarcodeCreationHandler
 {
@@ -127,7 +129,7 @@ public class BarcodeCreationHandler
                 String widthText = width.getText();
                 String heightText = height.getText();
 
-                int iWidth = widthText.isBlank() ? 300 : Integer.parseInt(widthText);
+                int iWidth = widthText == null || widthText.isBlank() ? 300 : Integer.parseInt(widthText);
 
                 if (iWidth == 0)
                 {
@@ -135,7 +137,7 @@ public class BarcodeCreationHandler
                     return;
                 }
 
-                int iHeight = heightText.isBlank() ? 150 : Integer.parseInt(heightText);
+                int iHeight = heightText == null || heightText.isBlank() ? 150 : Integer.parseInt(heightText);
 
                 if (iHeight == 0)
                 {
@@ -229,10 +231,7 @@ public class BarcodeCreationHandler
             }
             catch (Exception e)
             {
-                if (SettingHandler.pushNotifications)
-                {
-                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
-                }
+                sendErrorPushNotification(detailArea, e);
 
                 if (e instanceof IllegalArgumentException)
                 {
@@ -305,28 +304,11 @@ public class BarcodeCreationHandler
 
                         validAction(detailArea, text);
 
-                        if (SettingHandler.pushNotifications)
-                        {
-                            SystemTray tray = SystemTray.getSystemTray();
+                        String caption = "Successfully created barcode '" + file.getName() + "'";
 
-                            java.awt.Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+                        sendPushNotification(detailArea, (e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, file), TrayIcon.MessageType.INFO, caption, text);
 
-                            TrayIcon trayIcon = new TrayIcon(image);
-                            trayIcon.setImageAutoSize(true);
-                            trayIcon.addActionListener((e) -> WindowsExplorer.openDirectoryAndHighlightFile(detailArea, file));
-
-                            tray.add(trayIcon);
-
-                            String caption = "Successfully created barcode '" + file.getName() + "'";
-
-                            trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
-
-                            TimeUnit.MILLISECONDS.sleep(500);
-
-                            tray.remove(trayIcon);
-                        }
-
-                        if (SettingHandler.autoOpenExplorer)
+                        if (autoOpenExplorer)
                         {
                             WindowsExplorer.openDirectoryAndHighlightFile(detailArea, file);
                         }
@@ -377,11 +359,7 @@ public class BarcodeCreationHandler
                     catch (Exception e)
                     {
                         invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-                        if (SettingHandler.pushNotifications)
-                        {
-                            TrayIconHandler.sendErrorPushNotification(detailArea, e);
-                        }
+                        sendErrorPushNotification(detailArea, e);
                     }
                 }
         );

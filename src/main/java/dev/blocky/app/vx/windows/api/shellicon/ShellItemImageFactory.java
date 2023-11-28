@@ -29,13 +29,8 @@ public class ShellItemImageFactory extends Unknown
         super(pvInstance);
     }
 
-    public WinNT.HRESULT GetImage(
-            SIZEByValue size,
-            int flags,
-            PointerByReference bitmap
-    )
+    public WinNT.HRESULT GetImage(SIZEByValue size, int flags, PointerByReference bitmap)
     {
-        return (WinNT.HRESULT) _invokeNativeObject(3,
-                new Object[]{this.getPointer(), size, flags, bitmap}, WinNT.HRESULT.class);
+        return (WinNT.HRESULT) _invokeNativeObject(3, new Object[]{this.getPointer(), size, flags, bitmap}, WinNT.HRESULT.class);
     }
 }

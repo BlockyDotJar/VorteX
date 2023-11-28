@@ -20,7 +20,6 @@ package dev.blocky.app.vx.handler;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import dev.blocky.app.vx.entities.NodeCreator;
-import dev.blocky.app.vx.updater.ApplicationUpdater;
 import dev.blocky.app.vx.windows.api.dwm.DWMAttribute;
 import dev.blocky.app.vx.windows.api.dwm.DWMHandler;
 import javafx.application.HostServices;
@@ -28,15 +27,13 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Worker;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.control.ToggleSwitch;
 import org.json.JSONObject;
@@ -47,6 +44,11 @@ import java.util.List;
 
 import static dev.blocky.app.vx.handler.ActionHandler.invalidAction;
 import static dev.blocky.app.vx.handler.ActionHandler.lastUsedButton;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
+import static dev.blocky.app.vx.updater.ApplicationUpdater.initApplicationUpdater;
+import static dev.blocky.app.vx.windows.api.dwm.DWMHandler.dwmSetIntValue;
+import static dev.blocky.app.vx.windows.api.dwm.DWMHandler.setMicaStyle;
+import static java.nio.file.Files.writeString;
 
 public class SettingHandler
 {
@@ -82,7 +84,8 @@ public class SettingHandler
             String displayVersion = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion");
 
             int dvNumber = Integer.parseInt(StringUtils.remove(displayVersion, "H"));
-            boolean validVersion = dvNumber >= 222;
+
+            boolean validVersion = dvNumber >= 222 && SystemUtils.IS_OS_WINDOWS_11;
 
             JSONObject root = new JSONObject(readSettings(detailArea));
 
@@ -241,7 +244,7 @@ public class SettingHandler
                         values = List.of(false, dwma.value, true);
                     }
 
-                    DWMHandler.setMicaMaterial(dwma, false);
+                    setMicaStyle(dwma, false);
 
                     writeMultipleSettingsToFile(detailArea, writeToDWMObjectList, dwmSubStrList, keys, values);
                 }
@@ -269,7 +272,7 @@ public class SettingHandler
                         immersiveDarkModeSwitch.setSelected(true);
 
                         scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/dwm-dark-styles.css").toExternalForm());
-                        DWMHandler.setMicaMaterial(dwma, true);
+                        setMicaStyle(dwma, true);
 
                         List<Boolean> writeToDWMObjectList = List.of(true, true, false);
                         List<String> dwmSubStrList = List.of("undefined", "undefined", "undefined");
@@ -283,7 +286,7 @@ public class SettingHandler
                     if (immersiveDarkModeSwitch.isSelected())
                     {
                         scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/dwm-dark-styles.css").toExternalForm());
-                        DWMHandler.setMicaMaterial(dwma, true);
+                        setMicaStyle(dwma, true);
 
                         List<Boolean> writeToDWMObjectList = List.of(true, true);
                         List<String> dwmSubStrList = List.of("undefined", "undefined");
@@ -296,7 +299,7 @@ public class SettingHandler
 
                     scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/dwm-styles.css").toExternalForm());
 
-                    DWMHandler.setMicaMaterial(dwma, false);
+                    setMicaStyle(dwma, false);
 
                     List<Boolean> writeToDWMObjectList = List.of(true, true);
                     List<String> dwmSubStrList = List.of("undefined", "undefined");
@@ -315,8 +318,6 @@ public class SettingHandler
         {
             writeSettingsFile(detailArea, true, null, "immersive-dark-mode", newVal);
 
-            DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle("VorteX");
-
             scene.getStylesheets().removeAll
                     (
                             SettingHandler.class.getResource("/assets/ui/css/dwm-styles.css").toExternalForm(),
@@ -326,12 +327,12 @@ public class SettingHandler
             if (newVal)
             {
                 scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/dwm-dark-styles.css").toExternalForm());
-                DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, true);
+                DWMHandler.dwmSetBooleanValue(DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, true);
                 return;
             }
 
             scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/dwm-styles.css").toExternalForm());
-            DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, false);
+            DWMHandler.dwmSetBooleanValue(DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, false);
         });
     }
 
@@ -390,62 +391,8 @@ public class SettingHandler
                 new Thread(() ->
                         Platform.runLater(() ->
                         {
-                            ApplicationUpdater updater = new ApplicationUpdater();
-                            List<String> versionDetails = updater.newVersion(detailArea);
-
-                            if (!versionDetails.isEmpty())
+                            if (initApplicationUpdater(hostServices, detailArea, script))
                             {
-                                String version = versionDetails.get(2);
-                                String releaseLink = versionDetails.get(0);
-
-                                AnchorPane alertPane = new AnchorPane();
-                                alertPane.setMinSize(705, 435);
-                                alertPane.setMaxSize(705, 435);
-
-                                String text = "Version " + version + " is here! Do you want to install the newest version of VorteX?";
-
-                                Label label = creator.createLabel(text, 20, 0);
-                                Hyperlink hyperlink = creator.createHyperlink(hostServices, "Read here about the new version.", releaseLink, 16, 15);
-
-                                WebView webView = creator.createWebView(20, 40);
-                                WebEngine webEngine = webView.getEngine();
-                                webEngine.load(releaseLink);
-
-                                alertPane.getChildren().addAll(label, hyperlink, webView);
-
-                                String title = "New VorteX version available!";
-                                String headerText = "Looks like there is a new version of VorteX (" + version + ") available!";
-
-                                Alert updateAlert = creator.createAlert(Alert.AlertType.CONFIRMATION, title, headerText, alertPane);
-
-                                ButtonType downloadButton = new ButtonType("Download", ButtonBar.ButtonData.OK_DONE);
-                                updateAlert.getButtonTypes().setAll(downloadButton, ButtonType.CANCEL);
-
-                                webEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
-                                {
-                                    if (newValue == Worker.State.SCHEDULED)
-                                    {
-                                        webView.setVisible(false);
-                                    }
-
-                                    if (newValue == Worker.State.SUCCEEDED)
-                                    {
-                                        webEngine.executeScript(script);
-
-                                        webView.setVisible(true);
-
-                                        if (!updateAlert.isShowing())
-                                        {
-                                            updateAlert.showAndWait().ifPresent((bt) ->
-                                            {
-                                                if (bt.getButtonData() == ButtonBar.ButtonData.OK_DONE)
-                                                {
-                                                    updater.startDownloadTask(hostServices, creator, detailArea, versionDetails);
-                                                }
-                                            });
-                                        }
-                                    }
-                                });
                                 return;
                             }
 
@@ -486,39 +433,37 @@ public class SettingHandler
 
             writeSettingsFile(detailArea, true, dwmSubStr, textField.getPromptText(), getActualValueAsInt(textField.getText()));
 
-            DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle("VorteX");
-
             int rCaptionInt = getActualValueAsInt(rCaption.getText());
             int gCaptionInt = getActualValueAsInt(gCaption.getText());
             int bCaptionInt = getActualValueAsInt(bCaption.getText());
 
-            DWMHandler.dwmSetIntValue(handle, DWMAttribute.DWMWA_CAPTION_COLOR, -1);
+            dwmSetIntValue(DWMAttribute.DWMWA_CAPTION_COLOR, -1);
 
             if (rCaptionInt != -1 && gCaptionInt != -1 && bCaptionInt != -1)
             {
-                DWMHandler.setCaptionColor(handle, Color.rgb(rCaptionInt, gCaptionInt, bCaptionInt));
+                DWMHandler.setCaptionColor(Color.rgb(rCaptionInt, gCaptionInt, bCaptionInt));
             }
 
             int rTextInt = getActualValueAsInt(rText.getText());
             int gTextInt = getActualValueAsInt(gText.getText());
             int bTextInt = getActualValueAsInt(bText.getText());
 
-            DWMHandler.dwmSetIntValue(handle, DWMAttribute.DWMWA_TEXT_COLOR, -1);
+            dwmSetIntValue(DWMAttribute.DWMWA_TEXT_COLOR, -1);
 
             if (rTextInt != -1 && gTextInt != -1 && bTextInt != -1)
             {
-                DWMHandler.setTextColor(handle, Color.rgb(rTextInt, gTextInt, bTextInt));
+                DWMHandler.setTextColor(Color.rgb(rTextInt, gTextInt, bTextInt));
             }
 
             int rBorderInt = getActualValueAsInt(rBorder.getText());
             int gBorderInt = getActualValueAsInt(gBorder.getText());
             int bBorderInt = getActualValueAsInt(bBorder.getText());
 
-            DWMHandler.dwmSetIntValue(handle, DWMAttribute.DWMWA_BORDER_COLOR, -1);
+            dwmSetIntValue(DWMAttribute.DWMWA_BORDER_COLOR, -1);
 
             if (rBorderInt != -1 && gBorderInt != -1 && bBorderInt != -1)
             {
-                DWMHandler.setBorderColor(handle, Color.rgb(rBorderInt, gBorderInt, bBorderInt));
+                DWMHandler.setBorderColor(Color.rgb(rBorderInt, gBorderInt, bBorderInt));
             }
         };
     }
@@ -534,11 +479,7 @@ public class SettingHandler
         catch (Exception e)
         {
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-            if (pushNotifications)
-            {
-                TrayIconHandler.sendErrorPushNotification(detailArea, e);
-            }
+            sendErrorPushNotification(detailArea, e);
         }
         return null;
     }
@@ -555,7 +496,7 @@ public class SettingHandler
             if (!writeToDWMObject)
             {
                 root.put(key, value);
-                Files.writeString(settingsFile.toPath(), root.toString());
+                writeString(settingsFile.toPath(), root.toString(4));
                 return;
             }
 
@@ -564,23 +505,19 @@ public class SettingHandler
             if (dwmSubStr == null)
             {
                 dwm.put(key, value);
-                Files.writeString(settingsFile.toPath(), root.toString());
+                writeString(settingsFile.toPath(), root.toString(4));
                 return;
             }
 
             JSONObject dwmSub = dwm.getJSONObject(dwmSubStr);
             dwmSub.put(key, value);
 
-            Files.writeString(settingsFile.toPath(), root.toString());
+            writeString(settingsFile.toPath(), root.toString(4));
         }
         catch (Exception e)
         {
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-            if (pushNotifications)
-            {
-                TrayIconHandler.sendErrorPushNotification(detailArea, e);
-            }
+            sendErrorPushNotification(detailArea, e);
         }
     }
 
@@ -605,7 +542,7 @@ public class SettingHandler
                 if (!writeToDWMObject)
                 {
                     root.put(key, value);
-                    Files.writeString(settingsFile.toPath(), root.toString());
+                    writeString(settingsFile.toPath(), root.toString(4));
                     continue;
                 }
 
@@ -614,7 +551,7 @@ public class SettingHandler
                 if (dwmSubStr.equals("undefined"))
                 {
                     dwm.put(key, value);
-                    Files.writeString(settingsFile.toPath(), root.toString());
+                    writeString(settingsFile.toPath(), root.toString(4));
                     continue;
                 }
 
@@ -622,16 +559,12 @@ public class SettingHandler
                 dwmSub.put(key, value);
             }
 
-            Files.writeString(settingsFile.toPath(), root.toString());
+            writeString(settingsFile.toPath(), root.toString(4));
         }
         catch (Exception e)
         {
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-            if (pushNotifications)
-            {
-                TrayIconHandler.sendErrorPushNotification(detailArea, e);
-            }
+            sendErrorPushNotification(detailArea, e);
         }
     }
 

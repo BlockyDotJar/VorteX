@@ -299,9 +299,9 @@
 }
 
 .popover .content {
-    -fx-border-color: white;
-    -fx-border-width: 0;
-    -fx-border-radius: 0;
+    -fx-border-color: black;
+    -fx-border-width: 2px;
+    -fx-border-radius: 5px;
 }
 
 .tree-view {

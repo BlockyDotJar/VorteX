@@ -17,17 +17,16 @@
  */
 package dev.blocky.app.vx.windows.api;
 
-import dev.blocky.app.vx.handler.SettingHandler;
-import dev.blocky.app.vx.handler.TrayIconHandler;
 import javafx.scene.control.TextArea;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 
 import static dev.blocky.app.vx.handler.ActionHandler.invalidAction;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
 
 public class WindowsExplorer
 {
@@ -47,29 +46,21 @@ public class WindowsExplorer
             if (process.waitFor() != 0)
             {
                 StringWriter writer = new StringWriter();
-                IOUtils.copy(process.getErrorStream(), writer, UTF_8);
+                IOUtils.copy(process.getErrorStream(), writer, StandardCharsets.UTF_8);
 
                 String stackTrace = writer.toString();
 
                 if (!stackTrace.isBlank())
                 {
                     invalidAction(detailArea, writer.toString());
-
-                    if (SettingHandler.pushNotifications)
-                    {
-                        TrayIconHandler.sendErrorPushNotification(detailArea, new IllegalStateException(writer.toString()));
-                    }
+                    sendErrorPushNotification(detailArea, new IllegalStateException(writer.toString()));
                 }
             }
         }
         catch (Exception e)
         {
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-            if (SettingHandler.pushNotifications)
-            {
-                TrayIconHandler.sendErrorPushNotification(detailArea, e);
-            }
+            sendErrorPushNotification(detailArea, e);
         }
     }
 }

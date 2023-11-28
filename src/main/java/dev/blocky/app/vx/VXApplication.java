@@ -20,14 +20,11 @@ package dev.blocky.app.vx;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import dev.blocky.app.vx.entities.NodeCreator;
-import dev.blocky.app.vx.handler.SettingHandler;
-import dev.blocky.app.vx.updater.ApplicationUpdater;
 import dev.blocky.app.vx.windows.api.dwm.DWMAttribute;
 import dev.blocky.app.vx.windows.api.dwm.DWMHandler;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.application.Platform;
-import javafx.concurrent.Worker;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -35,8 +32,6 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.apache.commons.io.FilenameUtils;
@@ -50,15 +45,20 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static dev.blocky.app.vx.handler.ActionHandler.lastUsedButton;
-import static dev.blocky.app.vx.handler.ArchiveCreationHandler.*;
+import static dev.blocky.app.vx.handler.ArchiveCreationHandler.initCreateArchive;
+import static dev.blocky.app.vx.handler.ArchiveCreationHandler.initRoot;
 import static dev.blocky.app.vx.handler.ArchiveExtractionHandler.initExtractArchive;
 import static dev.blocky.app.vx.handler.ArchiveOpeningHandler.initOpenArchive;
 import static dev.blocky.app.vx.handler.BarcodeCreationHandler.initCreateBarcode;
 import static dev.blocky.app.vx.handler.BarcodeReadingHandler.initReadBarcode;
-import static dev.blocky.app.vx.handler.SettingHandler.*;
+import static dev.blocky.app.vx.handler.SettingHandler.initSettings;
+import static dev.blocky.app.vx.handler.SettingHandler.updateCheck;
+import static dev.blocky.app.vx.updater.ApplicationUpdater.initApplicationUpdater;
 
 public class VXApplication extends Application
 {
@@ -127,7 +127,7 @@ public class VXApplication extends Application
         {
             createArchive = creator.createButton("Create Archive", 10, 10, 125, true);
             lastUsedButton = createArchive;
-            initRoot(stage, anchorPane, detailArea);
+            initRoot(stage, anchorPane, detailArea, createArchive);
         }
 
         if (args.length == 1)
@@ -183,7 +183,7 @@ public class VXApplication extends Application
         File settingsFile = new File(vortexHome + "\\settings.json");
         String jsonInput = Files.readString(settingsFile.toPath());
 
-        String cssFile = "styles";
+        String cssFilename = "styles";
 
         JSONObject root = new JSONObject(jsonInput);
 
@@ -196,26 +196,26 @@ public class VXApplication extends Application
 
         if (windowType == 1 && !defaultDarkMode)
         {
-            cssFile = "styles";
+            cssFilename = "styles";
         }
 
         if (windowType == 1 && defaultDarkMode)
         {
-            cssFile = "dark-styles";
+            cssFilename = "dark-styles";
         }
 
         if ((windowType == 2 || windowType == 4) && !immersiveDarkMode)
         {
-            cssFile = "dwm-styles";
+            cssFilename = "dwm-styles";
         }
 
         if ((windowType == 2 || windowType == 4) && immersiveDarkMode)
         {
-            cssFile = "dwm-dark-styles";
+            cssFilename = "dwm-dark-styles";
         }
 
         Scene scene = new Scene(hiddenSidesPane, 605, 525);
-        scene.getStylesheets().add(getClass().getResource("/assets/ui/css/" + cssFile + ".css").toExternalForm());
+        scene.getStylesheets().add(getClass().getResource("/assets/ui/css/" + cssFilename + ".css").toExternalForm());
         scene.setFill(Color.TRANSPARENT);
 
         stage.setScene(scene);
@@ -244,111 +244,26 @@ public class VXApplication extends Application
             {
                 if (windowType == 2 || windowType == 4)
                 {
-                    DWMAttribute dwma = DWMAttribute.findAttribute(windowType);
-                    DWMHandler.setMicaMaterial(dwma, immersiveDarkMode);
+                    DWMAttribute dwmAttribute = DWMAttribute.findAttribute(windowType);
+                    DWMHandler.setMicaStyle(dwmAttribute, immersiveDarkMode);
                 }
 
-                DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle("VorteX");
+                DWMHandler.handleStyleSettings(dwm);
+            }
 
-                JSONObject caption = dwm.getJSONObject("caption");
+            ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-                int rCaptionInt = caption.getInt("r");
-                int gCaptionInt = caption.getInt("g");
-                int bCaptionInt = caption.getInt("b");
-
-                if (rCaptionInt != -1 && gCaptionInt != -1 && bCaptionInt != -1)
-                {
-                    DWMHandler.setCaptionColor(handle, Color.rgb(rCaptionInt, gCaptionInt, bCaptionInt));
-                }
-
-                JSONObject text = dwm.getJSONObject("text");
-
-                int rTextInt = text.getInt("r");
-                int gTextInt = text.getInt("g");
-                int bTextInt = text.getInt("b");
-
-                if (rTextInt != -1 && gTextInt != -1 && bTextInt != -1)
-                {
-                    DWMHandler.setTextColor(handle, Color.rgb(rTextInt, gTextInt, bTextInt));
-                }
-
-                JSONObject border = dwm.getJSONObject("border");
-
-                int rBorderInt = border.getInt("r");
-                int gBorderInt = border.getInt("g");
-                int bBorderInt = border.getInt("b");
-
-                if (rBorderInt != -1 && gBorderInt != -1 && bBorderInt != -1)
-                {
-                    DWMHandler.setBorderColor(handle, Color.rgb(rBorderInt, gBorderInt, bBorderInt));
-                }
-           }
-
-            new Thread(() ->
+            executor.schedule(() ->
                     Platform.runLater(() ->
                     {
-                        if (SettingHandler.updateCheck)
+                        if (updateCheck)
                         {
-                            ApplicationUpdater updater = new ApplicationUpdater();
-                            List<String> versionDetails = updater.newVersion(detailArea);
-
-                            if (!versionDetails.isEmpty())
-                            {
-                                String version = versionDetails.get(2);
-                                String releaseLink = versionDetails.get(0);
-
-                                AnchorPane alertPane = new AnchorPane();
-                                alertPane.setMinSize(705, 435);
-                                alertPane.setMaxSize(705, 435);
-
-                                String text = "Version " + version + " is here! Do you want to install the newest version of VorteX?";
-
-                                Label label = creator.createLabel(text, 20, 0);
-                                Hyperlink hyperlink = creator.createHyperlink(hostServices, "Read here about the new version.", releaseLink, 16, 15);
-
-                                WebView webView = creator.createWebView(20, 40);
-                                WebEngine webEngine = webView.getEngine();
-                                webEngine.load(releaseLink);
-
-                                alertPane.getChildren().addAll(label, hyperlink, webView);
-
-                                String title = "New VorteX version available!";
-                                String headerText = "Looks like there is a new version of VorteX (" + version + ") available!";
-
-                                Alert updateAlert = creator.createAlert(Alert.AlertType.CONFIRMATION, title, headerText, alertPane);
-
-                                ButtonType downloadButton = new ButtonType("Download", ButtonBar.ButtonData.OK_DONE);
-                                updateAlert.getButtonTypes().setAll(downloadButton, ButtonType.CANCEL);
-
-                                webEngine.getLoadWorker().stateProperty().addListener((observable, oldValue, newValue) ->
-                                {
-                                    if (newValue == Worker.State.SCHEDULED)
-                                    {
-                                        webView.setVisible(false);
-                                    }
-
-                                    if (newValue == Worker.State.SUCCEEDED)
-                                    {
-                                        webEngine.executeScript(script);
-
-                                        webView.setVisible(true);
-
-                                        if (!updateAlert.isShowing())
-                                        {
-                                            updateAlert.showAndWait().ifPresent((bt) ->
-                                            {
-                                                if (bt.getButtonData() == ButtonBar.ButtonData.OK_DONE)
-                                                {
-                                                    updater.startDownloadTask(hostServices, creator, detailArea, versionDetails);
-                                                }
-                                            });
-                                        }
-                                    }
-                                });
-                            }
+                            initApplicationUpdater(hostServices, detailArea, script);
                         }
-                    })
-            ).start();
+                    }), 5, TimeUnit.SECONDS
+            );
+
+            executor.shutdown();
         });
     }
 

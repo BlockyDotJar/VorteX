@@ -5,6 +5,7 @@ AppVerName=VorteX Wizard {#SetupSetting('AppVersion')}
 DefaultDirName={commonpf32}\VorteX
 DefaultGroupName=VorteX
 OutputDir="D:\VorteX-Builds"
+SourceDir={#SetupSetting('OutputDir')}
 OutputBaseFilename=VorteX-Setup-{#SetupSetting('AppVersion')}
 ChangesAssociations=yes
 
@@ -16,10 +17,11 @@ Name: "{app}"
 Name: "{app}\temp"; Flags: uninsneveruninstall
 
 [Files]
-Source: "D:\VorteX-Builds\LICENSE"; DestDir: "{app}"; Flags: replacesameversion
-Source: "D:\VorteX-Builds\vxar.exe"; DestDir: "{app}"; Flags: replacesameversion
-Source: "D:\VorteX-Builds\icon.ico"; DestDir: "{app}"; Flags: replacesameversion
-Source: "D:\VorteX-Builds\installation-wizard.bmp"; DestDir: "{tmp}"; Flags: dontcopy
+Source: "LICENSE"; DestDir: "{app}"; Flags: replacesameversion
+Source: "vxar.exe"; DestDir: "{app}"; Flags: replacesameversion
+Source: "icon.ico"; DestDir: "{app}"; Flags: replacesameversion
+Source: "settings.json"; DestDir: "{app}"; Flags: uninsneveruninstall
+Source: "installation-wizard.bmp"; DestDir: "{tmp}"; Flags: dontcopy
 
 [Icons]
 Name: "{commondesktop}\VorteX"; Filename: "{app}\vxar.exe"; IconFilename: "{app}\icon.ico"; Tasks: desktopicon; Check: ShouldCreateDesktopShortcut

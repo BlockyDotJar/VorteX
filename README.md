@@ -1,4 +1,4 @@
-## VorteX
+# VorteX
 
 <!--TODO: Add more fancy stuff here-->
 

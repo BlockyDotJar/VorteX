@@ -25,14 +25,15 @@ import com.sun.jna.platform.win32.W32Errors;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT;
 import javafx.scene.paint.Color;
+import org.json.JSONObject;
 
 public class DWMHandler
 {
-    public static class WindowHandle
+    public static class Window
     {
         private final WinDef.HWND value;
 
-        private WindowHandle(WinDef.HWND hwnd)
+        private Window(WinDef.HWND hwnd)
         {
             value = hwnd;
         }
@@ -51,9 +52,11 @@ public class DWMHandler
                 );
     }
 
-    public static boolean dwmSetBooleanValue(WindowHandle handle, DWMAttribute attribute, boolean value)
+    public static boolean dwmSetBooleanValue(DWMAttribute attribute, boolean value)
     {
-        if (handle == null)
+        Window window = findWindow();
+
+        if (window == null)
         {
             return false;
         }
@@ -62,7 +65,7 @@ public class DWMHandler
                 (
                         DWMSupport.INSTANCE.DwmSetWindowAttribute
                                 (
-                                        handle.value,
+                                        window.value,
                                         attribute.value,
                                         new WinDef.BOOLByReference(new WinDef.BOOL(value)),
                                         WinDef.BOOL.SIZE
@@ -70,9 +73,11 @@ public class DWMHandler
                 );
     }
 
-    public static boolean dwmSetIntValue(WindowHandle handle, DWMAttribute attribute, int value)
+    public static boolean dwmSetIntValue(DWMAttribute attribute, int value)
     {
-        if (handle == null)
+        Window window = findWindow();
+
+        if (window == null)
         {
             return false;
         }
@@ -81,7 +86,7 @@ public class DWMHandler
                 (
                         DWMSupport.INSTANCE.DwmSetWindowAttribute
                                 (
-                                        handle.value,
+                                        window.value,
                                         attribute.value,
                                         new WinDef.DWORDByReference(new WinDef.DWORD(value)),
                                         WinDef.DWORD.SIZE
@@ -89,46 +94,76 @@ public class DWMHandler
                 );
     }
 
-    public static WindowHandle findWindowHandle(String windowTitle)
+    public static Window findWindow()
     {
-        WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, windowTitle);
+        WinDef.HWND hwnd = User32.INSTANCE.FindWindow(null, "VorteX");
 
         if (hwnd != null)
         {
-            return new WindowHandle(hwnd);
+            return new Window(hwnd);
         }
         return null;
     }
 
-    public static boolean setBorderColor(WindowHandle handle, Color color)
+    public static boolean setBorderColor(Color color)
     {
-        return dwmSetIntValue(handle, DWMAttribute.DWMWA_BORDER_COLOR, RGB(color));
+        return dwmSetIntValue(DWMAttribute.DWMWA_BORDER_COLOR, RGB(color));
     }
 
-    public static boolean setCaptionColor(WindowHandle handle, Color color)
+    public static boolean setCaptionColor(Color color)
     {
-        return dwmSetIntValue(handle, DWMAttribute.DWMWA_CAPTION_COLOR, RGB(color));
+        return dwmSetIntValue(DWMAttribute.DWMWA_CAPTION_COLOR, RGB(color));
     }
 
-    public static boolean setTextColor(WindowHandle handle, Color color)
+    public static boolean setTextColor(Color color)
     {
-        return dwmSetIntValue(handle, DWMAttribute.DWMWA_TEXT_COLOR, RGB(color));
+        return dwmSetIntValue(DWMAttribute.DWMWA_TEXT_COLOR, RGB(color));
     }
 
-    public static void setMicaMaterial(DWMAttribute dwma, boolean useImmersiveDarkMode)
+    public static void setMicaStyle(DWMAttribute dwmAttribute, boolean useImmersiveDarkMode)
     {
-        DWMHandler.WindowHandle handle = DWMHandler.findWindowHandle("VorteX");
-        DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, useImmersiveDarkMode);
+        dwmSetBooleanValue(DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, useImmersiveDarkMode);
 
-        if (!DWMHandler.dwmSetIntValue(handle, DWMAttribute.DWMWA_SYSTEMBACKDROP_TYPE, dwma.value))
+        if (!dwmSetIntValue(DWMAttribute.DWMWA_SYSTEMBACKDROP_TYPE, dwmAttribute.value))
         {
-            DWMHandler.dwmSetBooleanValue(handle, DWMAttribute.DWMWA_MICA_EFFECT, true);
+            dwmSetBooleanValue(DWMAttribute.DWMWA_MICA_EFFECT, true);
         }
     }
 
-    private static int floatingTo8Bit(double n)
+    public static void handleStyleSettings(JSONObject dwm)
     {
-        return (int) Math.min(255.0, Math.max(n * 255.0, 0.0));
+        JSONObject caption = dwm.getJSONObject("caption");
+
+        int rCaptionInt = caption.getInt("r");
+        int gCaptionInt = caption.getInt("g");
+        int bCaptionInt = caption.getInt("b");
+
+        if (rCaptionInt != -1 && gCaptionInt != -1 && bCaptionInt != -1)
+        {
+            setCaptionColor(Color.rgb(rCaptionInt, gCaptionInt, bCaptionInt));
+        }
+
+        JSONObject text = dwm.getJSONObject("text");
+
+        int rTextInt = text.getInt("r");
+        int gTextInt = text.getInt("g");
+        int bTextInt = text.getInt("b");
+
+        if (rTextInt != -1 && gTextInt != -1 && bTextInt != -1)
+        {
+            setTextColor(Color.rgb(rTextInt, gTextInt, bTextInt));
+        }
+
+        JSONObject border = dwm.getJSONObject("border");
+
+        int rBorderInt = border.getInt("r");
+        int gBorderInt = border.getInt("g");
+        int bBorderInt = border.getInt("b");
+
+        if (rBorderInt != -1 && gBorderInt != -1 && bBorderInt != -1)
+        {
+            setBorderColor(Color.rgb(rBorderInt, gBorderInt, bBorderInt));
+        }
     }
 
     private static boolean isOk(WinNT.HRESULT result)
@@ -136,7 +171,12 @@ public class DWMHandler
         return WinNT.HRESULT.compare(result, W32Errors.S_OK) == 0;
     }
 
-    static int RGB(Color color)
+    private static int floatingTo8Bit(double n)
+    {
+        return (int) Math.min(255.0, Math.max(n * 255.0, 0.0));
+    }
+
+    private static int RGB(Color color)
     {
         return (floatingTo8Bit(color.getBlue()) << 16)
                 | (floatingTo8Bit(color.getGreen()) << 8)

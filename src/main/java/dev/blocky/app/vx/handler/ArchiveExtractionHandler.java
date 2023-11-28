@@ -23,10 +23,10 @@ import javafx.application.HostServices;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
@@ -45,11 +45,13 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static dev.blocky.app.vx.handler.ActionHandler.*;
 import static dev.blocky.app.vx.handler.ArchiveCreationHandler.initShowPasswordCheck;
+import static dev.blocky.app.vx.handler.SettingHandler.autoOpenExplorer;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendPushNotification;
 
 public class ArchiveExtractionHandler
 {
@@ -60,6 +62,45 @@ public class ArchiveExtractionHandler
     private static PopOver extractionPreview;
     private static File fileToExtract;
 
+    public static void initRoot(Stage stage, HostServices hostServices, AnchorPane anchorPane, TextArea detailArea, Button extractArchive)
+    {
+        anchorPane.getChildren().clear();
+
+        Button chooseArchive = creator.createButton("Choose archive", 10, 170, 150, false);
+        Button extract = creator.createButton("Extract", 180, 170, 100, true);
+        Button clear = creator.createButton("Clear", 335, 170, -1, false);
+
+        PasswordField password = creator.createPasswordField("Enter the password of the archive", 10, 220);
+
+        password.textProperty().addListener((obs, oldVal, newVal) ->
+        {
+            if (fileToExtract == null)
+            {
+                extract.setDisable(true);
+                return;
+            }
+
+            if (newVal.isBlank())
+            {
+                extract.setDisable(true);
+                return;
+            }
+
+            extract.setDisable(false);
+        });
+
+        TextField passwordUnmasked = creator.createTextField("Enter the password of the archive", null, 10, 220, -1, false, false, true, false);
+
+        CheckBox showPassword = creator.createCheckBox("Show password", 460, 224);
+
+        anchorPane.getChildren().addAll(detailArea, password, passwordUnmasked, showPassword, chooseArchive, extract, clear);
+
+        initShowPasswordCheck(showPassword, password, passwordUnmasked);
+        initChooseArchive(stage, detailArea, chooseArchive, extract, password);
+        initExtract(stage, hostServices, detailArea, extract, password);
+        initClear(stage, hostServices, anchorPane, detailArea, extractArchive, clear);
+    }
+
     public static void initExtractArchive(Stage stage, HostServices hostServices, AnchorPane anchorPane, TextArea detailArea, Button extractArchive)
     {
         extractArchive.setOnAction(event ->
@@ -68,41 +109,7 @@ public class ArchiveExtractionHandler
             lastUsedButton = extractArchive;
             extractArchive.setDisable(true);
 
-            anchorPane.getChildren().clear();
-
-            Button chooseArchive = creator.createButton("Choose archive", 10, 170, 150, false);
-            Button extract = creator.createButton("Extract", 180, 170, 100, true);
-            Button clear = creator.createButton("Clear", 335, 170, -1, false);
-
-            PasswordField password = creator.createPasswordField("Enter the password of the archive", 10, 220);
-
-            password.textProperty().addListener((obs, oldVal, newVal) ->
-            {
-                if (fileToExtract == null)
-                {
-                    extract.setDisable(true);
-                    return;
-                }
-
-                if (newVal.isBlank())
-                {
-                    extract.setDisable(true);
-                    return;
-                }
-
-                extract.setDisable(false);
-            });
-
-            TextField passwordUnmasked = creator.createTextField("Enter the password of the archive", null, 10, 220, -1, false, false, true, false);
-
-            CheckBox showPassword = creator.createCheckBox("Show password", 460, 224);
-
-            anchorPane.getChildren().addAll(detailArea, password, passwordUnmasked, showPassword, chooseArchive, extract, clear);
-
-            initShowPasswordCheck(showPassword, password, passwordUnmasked);
-            initChooseArchive(stage, detailArea, chooseArchive, extract, password);
-            initExtract(stage, hostServices, detailArea, extract, password);
-            initClear(detailArea, clear, extract, password, showPassword);
+            initRoot(stage, hostServices, anchorPane, detailArea, extractArchive);
         });
     }
 
@@ -143,11 +150,7 @@ public class ArchiveExtractionHandler
             catch (Exception e)
             {
                 invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
-
-                if (SettingHandler.pushNotifications)
-                {
-                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
-                }
+                sendErrorPushNotification(detailArea, e);
             }
         });
     }
@@ -196,38 +199,18 @@ public class ArchiveExtractionHandler
 
                 fileToExtract = null;
 
-                if (SettingHandler.pushNotifications)
-                {
-                    SystemTray tray = SystemTray.getSystemTray();
+                String caption = "Successfully extracted '" + zipFile.getFile().getName() + "'";
 
-                    Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+                sendPushNotification(detailArea, (e) -> hostServices.showDocument(extractIn.getAbsolutePath()), TrayIcon.MessageType.INFO, caption, text);
 
-                    TrayIcon trayIcon = new TrayIcon(image);
-                    trayIcon.setImageAutoSize(true);
-                    trayIcon.addActionListener((e) -> hostServices.showDocument(extractIn.getAbsolutePath()));
-
-                    tray.add(trayIcon);
-
-                    String caption = "Successfully extracted '" + zipFile.getFile().getName() + "'";
-
-                    trayIcon.displayMessage(caption, text, TrayIcon.MessageType.INFO);
-
-                    TimeUnit.MILLISECONDS.sleep(500);
-
-                    tray.remove(trayIcon);
-                }
-
-                if (SettingHandler.autoOpenExplorer)
+                if (autoOpenExplorer)
                 {
                     hostServices.showDocument(extractIn.getAbsolutePath());
                 }
             }
             catch (Exception e)
             {
-                if (SettingHandler.pushNotifications)
-                {
-                    TrayIconHandler.sendErrorPushNotification(detailArea, e);
-                }
+                sendErrorPushNotification(detailArea, e);
 
                 if (e instanceof ZipException zipE)
                 {
@@ -429,19 +412,15 @@ public class ArchiveExtractionHandler
         });
     }
 
-    public static void initClear(TextArea detailArea, Button clear, Button extract, PasswordField password, CheckBox showPassword)
+    public static void initClear(Stage stage, HostServices hostServices, AnchorPane anchorPane, TextArea detailArea, Button extractArchive, Button clear)
     {
-        clear.setOnAction(event ->
-        {
-            detailArea.clear();
+        clear.setOnAction(event -> reset(stage, hostServices, anchorPane, detailArea, extractArchive));
+    }
 
-            extract.setDisable(true);
+    private static void reset(Stage stage, HostServices hostServices, AnchorPane anchorPane, TextArea detailArea, Button extractArchive)
+    {
+        fileToExtract = null;
 
-            password.clear();
-
-            showPassword.setSelected(false);
-
-            fileToExtract = null;
-        });
+        initRoot(stage, hostServices, anchorPane, detailArea, extractArchive);
     }
 }
