@@ -7,7 +7,7 @@
 [discord-invite-shield]: https://discord.com/api/guilds/876766868864647188/widget.png
 [discord-invite]: https://discord.gg/FnGFbzCw2r
 
-<img style="float:right" src="https://github.com/BlockyDotJar/VorteX/blob/main/src/main/resources/assets/icons/icon.png?raw=true" alt="Cartoon like monitor with purple border, blue background and the Microsoft logo." height="100" width="100">
+<img align="right" src="https://github.com/BlockyDotJar/VorteX/blob/main/src/main/resources/assets/icons/icon.png?raw=true" alt="Cartoon like monitor with purple border, blue background and the Microsoft logo." height="100" width="100">
 
 # VorteX
 
@@ -18,6 +18,8 @@ VorteX is a general utility program written in Java. You can create, open and ex
 <!--TODO: Add more fancy stuff here-->
 
 ## Supported Platforms
+
+<!--TODO: Create contributing wiki and GitHub templates-->
 
 Currently only **Windows** is supported. There might be a general Linux version of VorteX, but there probably won't be a macOS version, but that lies in the future.
 <br>If you really want this application on macOS or on a Linux Kernel based OS and you do have experience with Java and the Kernel/API of the OS you are using, feel free to fork this repository.
@@ -72,8 +74,8 @@ Here are some questions you might want to ask me:
 ## Dependencies
 
 This project is based on **Java 17**.
-<br>A JDK is packed into the executable file, so no manual installation needed.
 <br>All dependencies and plugins are managed automatically by Gradle.
+<br>A JDK is packed into the executable file, so no manual installation needed.
 
 * (**kotlin**) stdlib
     * Version: **v1.9.21**

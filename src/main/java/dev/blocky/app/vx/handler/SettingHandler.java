@@ -154,6 +154,8 @@ public class SettingHandler
             autoOpenExplorer = root.getBoolean("auto-open-explorer");
             boolean defaultDarkMode = root.getBoolean("default-dark-mode");
 
+            // TODO: Let the user use the default dark-mode combined with mica
+
             Label darkModeLabel = creator.createLabel("Use dark mode (mica must be disabled)", 60, 280);
             ToggleSwitch darkModeSwitch = creator.createToggleSwitch(-8, 280, defaultDarkMode, validVersion && dwma.value != 1);
 
@@ -167,6 +169,8 @@ public class SettingHandler
             ToggleSwitch pushNotificationSwitch = creator.createToggleSwitch(-8, 355, pushNotifications, false);
 
             String windowsVersion = "You are currently on: " + System.getProperty("os.name") + " " + displayVersion;
+
+            // TODO: Add option to let the user fill the background with a specific color
 
             Node displayVersionNode = creator.createLabel(windowsVersion, 10, 387);
 
@@ -430,6 +434,8 @@ public class SettingHandler
             }
 
             writeSettingsFile(detailArea, true, dwmSubStr, textField.getPromptText(), getActualValueAsInt(textField.getText()));
+
+            // TODO: Move this to DWMHandler class
 
             int rCaptionInt = getActualValueAsInt(rCaption.getText());
             int gCaptionInt = getActualValueAsInt(gCaption.getText());
