@@ -13,7 +13,7 @@
 
 [ ![download-shield][] ][download] [ ![license-shield][] ][license] [ ![discord-invite-shield][] ][discord-invite]
 
-VorteX is a general utility program written in Java. You can create, open and extract password encrypted and Base32 encoded archive files. With VorteX you can also create and read many different barcode types.
+VorteX is a general utility program written in Java. You can create, open and extract compressed password encrypted and Base32 encoded archive files. With VorteX you can also create and read different barcodes.
 
 <!--TODO: Add more fancy stuff here-->
 
