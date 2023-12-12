@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "dev.blocky.app.vx"
-version = "1.3.0"
+version = "1.0.0"
 description = "General utility program written in Java."
 
 repositories {
@@ -28,7 +28,7 @@ dependencies {
     implementation("org.openjfx:javafx-web:21.0.1:win")
     implementation("org.openjfx:javafx-swing:21.0.1:win")
 
-    implementation("net.java.dev.jna:jna-platform:5.13.0")
+    implementation("net.java.dev.jna:jna-platform:5.14.0")
 
     api("org.kohsuke:github-api:1.318")
     api("org.json:json:20231013")
@@ -41,7 +41,7 @@ dependencies {
     api("org.controlsfx:controlsfx:11.2.0")
 
     api("org.apache.commons:commons-lang3:3.14.0")
-    api("commons-io:commons-io:2.15.0")
+    api("commons-io:commons-io:2.15.1")
     api("commons-codec:commons-codec:1.16.0")
 }
 

@@ -244,8 +244,8 @@ public class VXApplication extends Application
             {
                 if (windowType == 2 || windowType == 4)
                 {
-                    DWMAttribute dwmAttribute = DWMAttribute.findAttribute(windowType);
-                    DWMHandler.setMicaStyle(dwmAttribute, immersiveDarkMode);
+                    DWMAttribute dwma = DWMAttribute.findAttribute(windowType);
+                    DWMHandler.setMicaStyle(dwma, immersiveDarkMode);
                 }
 
                 DWMHandler.handleStyleSettings(dwm);

@@ -120,11 +120,11 @@ public class DWMHandler
         return dwmSetIntValue(DWMAttribute.DWMWA_TEXT_COLOR, RGB(color));
     }
 
-    public static void setMicaStyle(DWMAttribute dwmAttribute, boolean useImmersiveDarkMode)
+    public static void setMicaStyle(DWMAttribute dwma, boolean useImmersiveDarkMode)
     {
         dwmSetBooleanValue(DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, useImmersiveDarkMode);
 
-        if (!dwmSetIntValue(DWMAttribute.DWMWA_SYSTEMBACKDROP_TYPE, dwmAttribute.value))
+        if (!dwmSetIntValue(DWMAttribute.DWMWA_SYSTEMBACKDROP_TYPE, dwma.value))
         {
             dwmSetBooleanValue(DWMAttribute.DWMWA_MICA_EFFECT, true);
         }
