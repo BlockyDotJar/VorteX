@@ -17,9 +17,9 @@ Name: "{app}"
 Name: "{app}\temp"; Flags: uninsneveruninstall
 
 [Files]
-Source: "LICENSE"; DestDir: "{app}"; Flags: replacesameversion
-Source: "vxar.exe"; DestDir: "{app}"; Flags: replacesameversion
-Source: "icon.ico"; DestDir: "{app}"; Flags: replacesameversion
+Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
+Source: "vxar.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "settings.json"; DestDir: "{app}"; Flags: uninsneveruninstall
 Source: "installation-wizard.bmp"; DestDir: "{tmp}"; Flags: dontcopy
 
