@@ -1,0 +1,28 @@
+name: Feature request
+description: Request a new feature
+body:
+    - type: markdown
+      attributes:
+          value: |-
+              Please join the [discord server](https://discord.gg/FnGFbzCw2r) for questions or ask them in [our discussions](https://github.com/BlockyDotJar/VorteX/discussions).
+              
+              Keep in mind that this isn't the place to learn Java.  
+              Please head over to [StackOverflow](https://stackoverflow.com/questions/tagged/java) for your general programming questions.
+    - type: checkboxes
+      attributes:
+          label: General troubleshooting
+          description: You confirm to have made the following checks first.
+          options:
+              - label: I have checked for similar issues on the issue-tracker.
+                required: true
+              - label: I have updated to the [latest VorteX version](https://github.com/BlockyDotJar/VorteX/releases/latest)
+                required: true
+              - label: I have checked the branches or the maintainer's pull requests for upcoming features.
+                required: true
+    - type: textarea
+      attributes:
+          label: "Feature request"
+          description: "Provide a small description of the feature you want to have added."
+          placeholder: "VorteX should get..."
+      validations:
+          required: true

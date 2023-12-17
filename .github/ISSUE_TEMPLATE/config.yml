@@ -1,0 +1,10 @@
+contact_links:
+    - name: Discord
+      url: https://discord.gg/FnGFbzCw2r
+      about: This Discord is the best place to receive fast support for your questions.
+    - name: Releases
+      url: https://github.com/BlockyDotJar/VorteX/releases
+      about: You can find the latest releases here on GitHub.
+    - name: Questions
+      url: https://github.com/BlockyDotJar/VorteX/discussions
+      about: You can ask questions about VorteX and find useful information in our discussions.

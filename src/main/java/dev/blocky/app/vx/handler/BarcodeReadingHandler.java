@@ -102,7 +102,7 @@ public class BarcodeReadingHandler
                                 new FileChooser.ExtensionFilter("JPEG Image", "*.jpg")
                         );
 
-                String initialDirectory = System.getProperty("user.home") + "\\" + "Pictures";
+                String initialDirectory = System.getProperty("user.home") + "\\Pictures";
 
                 FileChooser fileChooser = creator.createFileChooser("Choose barcode image file", initialDirectory, null, extensionFilter);
 

@@ -19,15 +19,13 @@ VorteX is a general utility program written in Java. You can create, open and ex
 
 ## Supported Platforms
 
-<!--TODO: Create contributing wiki and GitHub templates-->
+<!--TODO: Create contributing wiki-->
 
 Currently only **Windows** is supported. There might be a general Linux version of VorteX, but there probably won't be a macOS version, but that lies in the future.
 <br>If you really want this application on macOS or on a Linux Kernel based OS and you do have experience with Java and the Kernel/API of the OS you are using, feel free to fork this repository.
 See [license](https://github.com/BlockyDotJar/VorteX/blob/main/LICENSE) and [contribution](https://github.com/BlockyDotJar/VorteX/wiki/Contributing-to-VorteX) page.
 
 ## Why can't I change some settings?
-
-<!--TODO: Add some images-->
 
 These settings:
 
@@ -37,10 +35,14 @@ These settings:
 * Color for titlebar text
 * Color for window border
 
-are limited to **Windows 11 22H2 and later versions**. (you need at least build **22000** for mica **alt** and at least build **22621** for mica)
-<br>That means, that you are not able to use mica material on **lower** Windows versions. (Windows **10** is generally not supported and Windows **11 21H1/21H2** are also not yet supported)
-<br>You can see your current Windows display version if you take a look at the settings menu under **Get push notifications for executed tasks**.
-<br>[Read this](https://support.microsoft.com/en-us/windows/which-version-of-windows-operating-system-am-i-running-628bec99-476a-2c13-5296-9dd081cdd808) if you want to know, where to find the build version of your OS.
+are limited to **Windows 11 22H2 and later versions**.
+<br>That means, that you are not able to use mica material on **lower** Windows versions. (Windows **10** is generally not supported and Windows **11 21H1/21H2** also not)
+<br>You can see your current Windows display version and build if you take a look at the settings menu under **Get push notifications for executed tasks**.
+
+## Why can't i use dark mode?
+
+You need to set **DWMSBT_MAINWINDOW** or **DWMSBT_TABBEDWINDOW** to **DWMSBT_DISABLE** to use dark mode.
+<br>If you want to use mica with dark mode use the **Use immersive dark mode** button.
 
 ## What is a vxar file and how is it constructed?
 
@@ -78,71 +80,78 @@ This project is based on **Java 17**.
 <br>A JDK is packed into the executable file, so no manual installation needed.
 
 * (**kotlin**) stdlib
-    * Version: **v1.9.21**
+    * Version: **1.9.21**
     * [Github](https://github.com/JetBrains/kotlin/tree/master/libraries/stdlib)
 * javafx-base (**:win**)
-    * Version: **v21.0.1**
+    * Version: **21.0.1**
     * [Github](https://github.com/openjdk/jfx/tree/master/modules/javafx.base)
 * javafx-graphics (**:win**)
-    * Version: **v21.0.1**
+    * Version: **21.0.1**
     * [Github](https://github.com/openjdk/jfx/tree/master/modules/javafx.graphics)
 * javafx-controls (**:win**)
-    * Version: **v21.0.1**
+    * Version: **21.0.1**
     * [Github](https://github.com/openjdk/jfx/tree/master/modules/javafx.controls)
 * javafx-media (**:win**)
-    * Version: **v21.0.1**
+    * Version: **21.0.1**
     * [Github](https://github.com/openjdk/jfx/tree/master/modules/javafx.media)
 * javafx-web (**:win**)
-    * Version: **v21.0.1**
+    * Version: **21.0.1**
     * [Github](https://github.com/openjdk/jfx/tree/master/modules/javafx.web)
 * javafx-swing (**:win**)
-    * Version: **v21.0.1**
+    * Version: **21.0.1**
     * [Github](https://github.com/openjdk/jfx/tree/master/modules/javafx.swing)
 * jna-platform
-    * Version: **v5.14.0**
+    * Version: **5.14.0**
     * [Github](https://github.com/java-native-access/jna/tree/master/contrib/platform/src/com/sun/jna/platform)
 * github-api
-    * Version: **v1.318**
+    * Version: **1.318**
     * [Github](https://github.com/hub4j/github-api)
 * json
-    * Version: **v20231013**
+    * Version: **20231013**
     * [Github](https://github.com/stleary/JSON-java)
 * zip4j
-    * Version: **v2.11.5**
+    * Version: **2.11.5**
     * [Github](https://github.com/srikanth-lingala/zip4j)
 * (**zxing**) core
-    * Version: **v3.5.2**
+    * Version: **3.5.2**
     * [Github](https://github.com/zxing/zxing/tree/master/core)
 * (**zxing**) javase
-    * Version: **v3.5.2**
+    * Version: **3.5.2**
     * [Github](https://github.com/zxing/zxing/tree/master/javase)
 * controlsfx
-    * Version: **v11.2.0**
+    * Version: **11.2.0**
     * [Github](https://github.com/controlsfx/controlsfx)
 * commons-lang3
-    * Version: **v3.14.0**
+    * Version: **3.14.0**
     * [Github](https://github.com/apache/commons-lang)
 * commons-io
-    * Version: **v2.15.1**
+    * Version: **2.15.1**
     * [Github](https://github.com/apache/commons-io)
 * commons-codec
-    * Version: **v1.16.0**
+    * Version: **1.16.0**
     * [Github](https://github.com/apache/commons-codec)
 
 ## Plugins
 
 * versions
-    * Version: **v0.50.0**
+    * Version: **0.50.0**
     * [Github](https://github.com/ben-manes/gradle-versions-plugin)
 * launch4j
-    * Version: **v3.0.5**
+    * Version: **3.0.5**
     * [Github](https://github.com/TheBoegl/gradle-launch4j)
 * (**kotlin**) jvm
-    * Version: **v1.9.21**
+    * Version: **1.9.21**
     * [Github](https://github.com/JetBrains/kotlin/tree/master/libraries/stdlib/jvm)
 
-<!--TODO: Add other used tools-->
+## Other used tools
 
+* IntelliJ IDEA Community Edition
+    * Version: **2023.3.1**
+    * [Website](https://www.jetbrains.com/de-de/idea)
+* Inno Setup Compiler
+    * Version: **6.2.2**
+    * [Website](https://jrsoftware.org/isinfo.php)
+  
 ## LICENSE
 
 This project is licensed under [GNU General Public License Version 3](https://www.gnu.org/licenses/gpl-3.0.en.html).

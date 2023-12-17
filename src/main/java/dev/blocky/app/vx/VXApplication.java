@@ -242,13 +242,23 @@ public class VXApplication extends Application
 
             if (SystemUtils.IS_OS_WINDOWS_11 && dvNumber >= 222)
             {
+                if (windowType == 1 && !defaultDarkMode)
+                {
+                    DWMHandler.setCaptionColor(Color.rgb(230, 230, 250));
+                }
+
+                if (windowType == 1 && defaultDarkMode)
+                {
+                    DWMHandler.setCaptionColor(Color.rgb(34, 34, 34));
+                }
+
                 if (windowType == 2 || windowType == 4)
                 {
                     DWMAttribute dwma = DWMAttribute.findAttribute(windowType);
                     DWMHandler.setMicaStyle(dwma, immersiveDarkMode);
                 }
 
-                DWMHandler.handleStyleSettings(dwm);
+                DWMHandler.handleStyleSettings(anchorPane, dwm);
             }
 
             ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();

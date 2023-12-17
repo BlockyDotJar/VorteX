@@ -22,6 +22,7 @@ import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.model.FileHeader;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.util.HashSet;
@@ -44,7 +45,7 @@ public class Base32Codec
             if (!fileName.endsWith("/"))
             {
                 String extension = FilenameUtils.getExtension(lastPart);
-                String lpRaw = lastPart.replace("." + extension, "");
+                String lpRaw = StringUtils.remove(lastPart, "." + extension);
 
                 ecLp = base32.encodeAsString(lpRaw.getBytes()) + "." + extension;
             }
@@ -88,7 +89,7 @@ public class Base32Codec
                 }
 
                 String extension = FilenameUtils.getExtension(part);
-                String lpRaw = part.replace("." + extension, "");
+                String lpRaw = StringUtils.remove(part, "." + extension);
 
                 decodedPath.append(new String(base32.decode(lpRaw.getBytes()))).append(".").append(extension);
             }
@@ -113,7 +114,7 @@ public class Base32Codec
         }
 
         String extension = FilenameUtils.getExtension(part);
-        String fhRaw = part.replace("." + extension, "");
+        String fhRaw = StringUtils.remove(part, "." + extension);
 
         return new String(base32.decode(fhRaw.getBytes())) + "." + extension;
     }

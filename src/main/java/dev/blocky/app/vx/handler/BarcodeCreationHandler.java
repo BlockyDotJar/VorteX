@@ -42,6 +42,8 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.RegExUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import javax.imageio.ImageIO;
@@ -227,7 +229,9 @@ public class BarcodeCreationHandler
 
                 bcImage = imageView;
 
-                validAction(detailArea, "Successfully created " + barcodeFormatValue + " barcode with value '" + barcodeInputText + "', a width of " + iWidth + " and a height of " + iHeight + ".");
+                String text = String.format("Successfully created %s barcode with value '%s', a width of %d and a height of %d.", barcodeFormatValue, barcodeInputText, iWidth, iHeight);
+
+                validAction(detailArea, text);
             }
             catch (Exception e)
             {
@@ -258,7 +262,7 @@ public class BarcodeCreationHandler
                                         new FileChooser.ExtensionFilter("JPEG Image", "*.jpg")
                                 );
 
-                        String initialDirectory = System.getProperty("user.home") + "\\" + "Pictures";
+                        String initialDirectory = System.getProperty("user.home") + "\\Pictures";
 
                         FileChooser fileChooser = creator.createFileChooser("Save as...", initialDirectory, "barcode.png", extensionFilters);
                         File file = fileChooser.showSaveDialog(stage);
@@ -395,7 +399,7 @@ public class BarcodeCreationHandler
         {
             if (!newVal.matches("\\d*"))
             {
-                textField.setText(newVal.replaceAll("[^\\d.]", ""));
+                textField.setText(RegExUtils.removeAll(newVal, "[^\\d.]"));
             }
         };
     }

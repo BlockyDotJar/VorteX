@@ -24,8 +24,15 @@ import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.W32Errors;
 import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.platform.win32.WinNT;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
 import javafx.scene.paint.Color;
 import org.json.JSONObject;
+
+import java.util.List;
+
+import static dev.blocky.app.vx.handler.SettingHandler.getActualValueAsInt;
 
 public class DWMHandler
 {
@@ -107,17 +114,17 @@ public class DWMHandler
 
     public static boolean setBorderColor(Color color)
     {
-        return dwmSetIntValue(DWMAttribute.DWMWA_BORDER_COLOR, RGB(color));
+        return dwmSetIntValue(DWMAttribute.DWMWA_BORDER_COLOR, rgb(color));
     }
 
     public static boolean setCaptionColor(Color color)
     {
-        return dwmSetIntValue(DWMAttribute.DWMWA_CAPTION_COLOR, RGB(color));
+        return dwmSetIntValue(DWMAttribute.DWMWA_CAPTION_COLOR, rgb(color));
     }
 
     public static boolean setTextColor(Color color)
     {
-        return dwmSetIntValue(DWMAttribute.DWMWA_TEXT_COLOR, RGB(color));
+        return dwmSetIntValue(DWMAttribute.DWMWA_TEXT_COLOR, rgb(color));
     }
 
     public static void setMicaStyle(DWMAttribute dwma, boolean useImmersiveDarkMode)
@@ -130,7 +137,7 @@ public class DWMHandler
         }
     }
 
-    public static void handleStyleSettings(JSONObject dwm)
+    public static void handleStyleSettings(AnchorPane anchorPane, JSONObject dwm)
     {
         JSONObject caption = dwm.getJSONObject("caption");
 
@@ -164,6 +171,82 @@ public class DWMHandler
         {
             setBorderColor(Color.rgb(rBorderInt, gBorderInt, bBorderInt));
         }
+
+        JSONObject fill = dwm.getJSONObject("fill");
+
+        int rFillInt = fill.getInt("r");
+        int gFillInt = fill.getInt("g");
+        int bFillInt = fill.getInt("b");
+
+        anchorPane.setBackground(Background.EMPTY);
+
+        if (rFillInt != -1 && gFillInt != -1 && bFillInt != -1)
+        {
+            anchorPane.setBackground(Background.fill(Color.rgb(rFillInt, gFillInt, bFillInt)));
+        }
+    }
+
+    public static void handleStyle(AnchorPane anchorPane, List<TextField> textFields, boolean defaultDarkMode)
+    {
+        int rCaptionInt = getActualValueAsInt(textFields.get(0).getText());
+        int gCaptionInt = getActualValueAsInt(textFields.get(1).getText());
+        int bCaptionInt = getActualValueAsInt(textFields.get(2).getText());
+
+        if (defaultDarkMode)
+        {
+            setCaptionColor(Color.rgb(34, 34, 34));
+        }
+
+        if (!defaultDarkMode)
+        {
+            setCaptionColor(Color.rgb(230, 230, 250));
+        }
+
+        if (rCaptionInt != -1 && gCaptionInt != -1 && bCaptionInt != -1)
+        {
+            setCaptionColor(Color.rgb(rCaptionInt, gCaptionInt, bCaptionInt));
+        }
+
+        int rTextInt = getActualValueAsInt(textFields.get(3).getText());
+        int gTextInt = getActualValueAsInt(textFields.get(4).getText());
+        int bTextInt = getActualValueAsInt(textFields.get(5).getText());
+
+        dwmSetIntValue(DWMAttribute.DWMWA_TEXT_COLOR, -1);
+
+        if (rTextInt != -1 && gTextInt != -1 && bTextInt != -1)
+        {
+            setTextColor(Color.rgb(rTextInt, gTextInt, bTextInt));
+        }
+
+        int rBorderInt = getActualValueAsInt(textFields.get(6).getText());
+        int gBorderInt = getActualValueAsInt(textFields.get(7).getText());
+        int bBorderInt = getActualValueAsInt(textFields.get(8).getText());
+
+        dwmSetIntValue(DWMAttribute.DWMWA_BORDER_COLOR, -1);
+
+        if (rBorderInt != -1 && gBorderInt != -1 && bBorderInt != -1)
+        {
+            setBorderColor(Color.rgb(rBorderInt, gBorderInt, bBorderInt));
+        }
+
+        int rFillInt = getActualValueAsInt(textFields.get(9).getText());
+        int gFillInt = getActualValueAsInt(textFields.get(10).getText());
+        int bFillInt = getActualValueAsInt(textFields.get(11).getText());
+
+        anchorPane.setBackground(Background.EMPTY);
+
+        if (rFillInt != -1 && gFillInt != -1 && bFillInt != -1)
+        {
+            anchorPane.setBackground(Background.fill(Color.rgb(rFillInt, gFillInt, bFillInt)));
+        }
+    }
+
+    public static boolean usesCustomization(TextField rField, TextField gField, TextField bField)
+    {
+        int rFieldInt = getActualValueAsInt(rField.getText());
+        int gFieldInt = getActualValueAsInt(gField.getText());
+        int bFieldInt = getActualValueAsInt(bField.getText());
+        return rFieldInt != -1 && gFieldInt != -1 && bFieldInt != -1;
     }
 
     private static boolean isOk(WinNT.HRESULT result)
@@ -171,12 +254,12 @@ public class DWMHandler
         return WinNT.HRESULT.compare(result, W32Errors.S_OK) == 0;
     }
 
-    private static int floatingTo8Bit(double n)
+    private static int floatingTo8Bit(double number)
     {
-        return (int) Math.min(255.0, Math.max(n * 255.0, 0.0));
+        return (int) Math.min(255.0, Math.max(number * 255.0, 0.0));
     }
 
-    private static int RGB(Color color)
+    private static int rgb(Color color)
     {
         return (floatingTo8Bit(color.getBlue()) << 16)
                 | (floatingTo8Bit(color.getGreen()) << 8)

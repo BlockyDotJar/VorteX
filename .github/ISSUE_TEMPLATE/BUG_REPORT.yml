@@ -1,0 +1,52 @@
+name: Bug report
+description: Found a bug that needs to be fixed?
+body:
+    - type: markdown
+      attributes:
+          value: |-
+              Please join the [Discord server](https://discord.gg/FnGFbzCw2r) for questions or ask them in [our discussions](https://github.com/BlockyDotJar/VorteX/discussions).
+              
+              Keep in mind that this isn't the place to learn Java.  
+              Please head over to [StackOverflow](https://stackoverflow.com/questions/tagged/java) for your general programming questions.
+    - type: checkboxes
+      attributes:
+          label: General troubleshooting
+          description: You confirm to have made the following checks first.
+          options:
+              - label: I have checked for similar issues on the issue-tracker.
+                required: true
+              - label: I have updated to the [latest VorteX version](https://github.com/BlockyDotJar/VorteX/releases/latest)
+                required: true
+              - label: I have checked the maintainer's pull requests for upcoming bug fixes.
+                required: true
+    - type: textarea
+      attributes:
+          label: "Expected behaviour"
+          description: "What did you expect VorteX to do?"
+          placeholder: "VorteX should do..."
+      validations:
+          required: true
+    - type: textarea
+      attributes:
+          label: "Steps to reproduce"
+          description: |-
+              Please add some steps, that throws the error/exception for you to reproduce this problem.  
+              Leave this empty or put "N/A" if you don't have a reproducible setup.
+          placeholder: |-
+              1. Open VorteX
+              2. Go to 'Create barcode' tab
+              3. Click on the dropdown menu and select 'CODE_128'
+              4. Type in a specific string
+              5. Click on 'Generate'
+      validations:
+          required: true
+    - type: textarea
+      attributes:
+          label: "Error/Exception that gets thrown in the detail area or sent by Windows notifications"
+          description: |-
+              Share any exception or error you encountered.  
+              Leave this blank or put "N/A" if you don't have an exception or error.
+              
+              The provided text will be rendered as code, so you don't have to provide a code block for it.
+          render: Ruby
+          placeholder: "java.lang.NullPointerException: null"

@@ -191,7 +191,7 @@ public class ArchiveExtractionHandler
                     fileCount++;
                 }
 
-                String text = "Successfully extracted " + fileCount + " files and " + directoryCount + " directories from '" + fileToExtract.getName() + "' to " + extractIn.getAbsolutePath();
+                String text = String.format("Successfully extracted %d files and %d directories from %s to '%s'.", fileCount, directoryCount, fileToExtract.getName(), extractIn.getAbsolutePath());
 
                 validAction(detailArea, text);
 

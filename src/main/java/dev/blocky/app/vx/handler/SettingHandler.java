@@ -21,7 +21,6 @@ import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 import dev.blocky.app.vx.entities.NodeCreator;
 import dev.blocky.app.vx.windows.api.dwm.DWMAttribute;
-import dev.blocky.app.vx.windows.api.dwm.DWMHandler;
 import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -32,6 +31,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -46,21 +46,21 @@ import static dev.blocky.app.vx.handler.ActionHandler.invalidAction;
 import static dev.blocky.app.vx.handler.ActionHandler.lastUsedButton;
 import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
 import static dev.blocky.app.vx.updater.ApplicationUpdater.initApplicationUpdater;
-import static dev.blocky.app.vx.windows.api.dwm.DWMHandler.dwmSetIntValue;
-import static dev.blocky.app.vx.windows.api.dwm.DWMHandler.setMicaStyle;
+import static dev.blocky.app.vx.windows.api.dwm.DWMHandler.*;
 import static java.nio.file.Files.writeString;
 
 public class SettingHandler
 {
     private static final NodeCreator creator = new NodeCreator();
 
-    private static DWMAttribute dwma = DWMAttribute.DWMSBT_MAINWINDOW;
+    private static DWMAttribute dwma = DWMAttribute.DWMSBT_DISABLE;
 
     private static TextField rCaption, gCaption, bCaption;
     private static TextField rText, gText, bText;
     private static TextField rBorder, gBorder, bBorder;
+    private static TextField rFill, gFill, bFill;
 
-    public static boolean updateCheck = true, pushNotifications = true, autoOpenExplorer = false;
+    public static boolean defaultDarkMode = false, updateCheck = true, pushNotifications = true, autoOpenExplorer = false;
 
     public static void initSettings(HostServices hostServices, Scene scene, AnchorPane anchorPane, TextArea detailArea, String script, Button settings)
     {
@@ -81,6 +81,7 @@ public class SettingHandler
                             DWMAttribute.DWMSBT_TABBEDWINDOW
                     );
 
+            String buildVersion = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild");
             String displayVersion = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion");
 
             int dvNumber = Integer.parseInt(StringUtils.remove(displayVersion, "H"));
@@ -113,9 +114,9 @@ public class SettingHandler
             gCaption = creator.createTextField("g", getActualValue(gCaptionInt), 80, 150, 50, true, true, validVersion, !validVersion);
             bCaption = creator.createTextField("b", getActualValue(bCaptionInt), 150, 150, 50, true, true, validVersion, !validVersion);
 
-            rCaption.textProperty().addListener(createTextFieldChangeListener(detailArea, rCaption, "caption"));
-            gCaption.textProperty().addListener(createTextFieldChangeListener(detailArea, gCaption, "caption"));
-            bCaption.textProperty().addListener(createTextFieldChangeListener(detailArea, bCaption, "caption"));
+            rCaption.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rCaption, "caption"));
+            gCaption.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gCaption, "caption"));
+            bCaption.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bCaption, "caption"));
 
             Label textLabel = creator.createLabel("Color for titlebar text", 250, 120);
 
@@ -129,9 +130,9 @@ public class SettingHandler
             gText = creator.createTextField("g", getActualValue(gTextInt), 320, 150, 50, true, true, validVersion, !validVersion);
             bText = creator.createTextField("b", getActualValue(bTextInt), 390, 150, 50, true, true, validVersion, !validVersion);
 
-            rText.textProperty().addListener(createTextFieldChangeListener(detailArea, rText, "text"));
-            gText.textProperty().addListener(createTextFieldChangeListener(detailArea, gText, "text"));
-            bText.textProperty().addListener(createTextFieldChangeListener(detailArea, bText, "text"));
+            rText.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rText, "text"));
+            gText.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gText, "text"));
+            bText.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bText, "text"));
 
             Label borderLabel = creator.createLabel("Color for window border", 10, 200);
 
@@ -145,19 +146,33 @@ public class SettingHandler
             gBorder = creator.createTextField("g", getActualValue(gBorderInt), 80, 230, 50, true, true, validVersion, !validVersion);
             bBorder = creator.createTextField("b", getActualValue(bBorderInt), 150, 230, 50, true, true, validVersion, !validVersion);
 
-            rBorder.textProperty().addListener(createTextFieldChangeListener(detailArea, rBorder, "border"));
-            gBorder.textProperty().addListener(createTextFieldChangeListener(detailArea, gBorder, "border"));
-            bBorder.textProperty().addListener(createTextFieldChangeListener(detailArea, bBorder, "border"));
+            rBorder.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rBorder, "border"));
+            gBorder.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gBorder, "border"));
+            bBorder.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bBorder, "border"));
+
+            Label fillLabel = creator.createLabel("Color for window fill", 250, 200);
+
+            JSONObject fill = dwm.getJSONObject("fill");
+
+            int rFillInt = fill.getInt("r");
+            int gFillInt = fill.getInt("g");
+            int bFillInt = fill.getInt("b");
+
+            rFill = creator.createTextField("r", getActualValue(rFillInt), 250, 230, 50, true, true, true, false);
+            gFill = creator.createTextField("g", getActualValue(gFillInt), 320, 230, 50, true, true, true, false);
+            bFill = creator.createTextField("b", getActualValue(bFillInt), 390, 230, 50, true, true, true, false);
+
+            rFill.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rFill, "fill"));
+            gFill.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gFill, "fill"));
+            bFill.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bFill, "fill"));
 
             updateCheck = root.getBoolean("update-check");
             pushNotifications = root.getBoolean("push-notifications");
             autoOpenExplorer = root.getBoolean("auto-open-explorer");
-            boolean defaultDarkMode = root.getBoolean("default-dark-mode");
-
-            // TODO: Let the user use the default dark-mode combined with mica
+            defaultDarkMode = root.getBoolean("default-dark-mode");
 
             Label darkModeLabel = creator.createLabel("Use dark mode (mica must be disabled)", 60, 280);
-            ToggleSwitch darkModeSwitch = creator.createToggleSwitch(-8, 280, defaultDarkMode, validVersion && dwma.value != 1);
+            ToggleSwitch darkModeSwitch = creator.createToggleSwitch(-8, 280, defaultDarkMode, dwma.value != 1);
 
             Label checkUpdateLabel = creator.createLabel("Automatically check for updates", 60, 305);
             ToggleSwitch checkUpdateSwitch = creator.createToggleSwitch(-8, 305, updateCheck, false);
@@ -165,18 +180,16 @@ public class SettingHandler
             Label autoOpenExplorerLabel = creator.createLabel("Open Explorer on file creation success", 60, 330);
             ToggleSwitch autoOpenExplorerSwitch = creator.createToggleSwitch(-8, 330, autoOpenExplorer, false);
 
-            Label pushNotificationLabel = creator.createLabel("Get push notification for executed tasks", 60, 355);
+            Label pushNotificationLabel = creator.createLabel("Get push notifications for executed tasks", 60, 355);
             ToggleSwitch pushNotificationSwitch = creator.createToggleSwitch(-8, 355, pushNotifications, false);
 
-            String windowsVersion = "You are currently on: " + System.getProperty("os.name") + " " + displayVersion;
-
-            // TODO: Add option to let the user fill the background with a specific color
+            String windowsVersion = String.format("You are currently on: %s %s %s", System.getProperty("os.name"), displayVersion, buildVersion);
 
             Node displayVersionNode = creator.createLabel(windowsVersion, 10, 387);
 
             if (!validVersion)
             {
-                displayVersionNode = creator.createHyperlink(hostServices, windowsVersion, "https://github.com/BlockyDotJar/VorteX#why-cant-i-change-some-style-settings", 10, 387);
+                displayVersionNode = creator.createHyperlink(hostServices, windowsVersion, "https://github.com/BlockyDotJar/VorteX#why-cant-i-change-some-settings", 10, 387);
             }
 
             Button checkForUpdates = creator.createButton("Check for updates", 445, 375, 150, false);
@@ -185,8 +198,9 @@ public class SettingHandler
                     (
                             detailArea, dwmLabel, dwmAttribute, immersiveDarkModeLabel, immersiveDarkModeSwitch, captionLabel,
                             rCaption, gCaption, bCaption, textLabel, rText, gText, bText, borderLabel, rBorder, gBorder, bBorder,
-                            darkModeSwitch, darkModeLabel, checkUpdateSwitch, checkUpdateLabel, autoOpenExplorerSwitch, autoOpenExplorerLabel,
-                            pushNotificationSwitch, pushNotificationLabel, displayVersionNode, checkForUpdates
+                            fillLabel, rFill, gFill, bFill, darkModeSwitch, darkModeLabel, checkUpdateSwitch, checkUpdateLabel,
+                            autoOpenExplorerSwitch, autoOpenExplorerLabel, pushNotificationSwitch, pushNotificationLabel,
+                            displayVersionNode, checkForUpdates
                     );
 
             initDWMAttribute(scene, detailArea, dwmAttribute, immersiveDarkModeSwitch, darkModeSwitch);
@@ -229,6 +243,11 @@ public class SettingHandler
                     if (!wasSelected)
                     {
                         scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/styles.css").toExternalForm());
+
+                        if (!usesCustomization(rCaption, gCaption, bCaption))
+                        {
+                            setCaptionColor(Color.rgb(230, 230, 250));
+                        }
                     }
 
                     List<Boolean> writeToDWMObjectList = List.of(true, true);
@@ -246,6 +265,11 @@ public class SettingHandler
                         dwmSubStrList = List.of("undefined", "undefined", "undefined");
                         keys = List.of("immersive-dark-mode", "window-type", "default-dark-mode");
                         values = List.of(false, dwma.value, true);
+
+                        if (!usesCustomization(rCaption, gCaption, bCaption))
+                        {
+                            setCaptionColor(Color.rgb(34, 34, 34));
+                        }
                     }
 
                     setMicaStyle(dwma, false);
@@ -270,6 +294,11 @@ public class SettingHandler
                                     SettingHandler.class.getResource("/assets/ui/css/dwm-styles.css").toExternalForm(),
                                     SettingHandler.class.getResource("/assets/ui/css/dwm-dark-styles.css").toExternalForm()
                             );
+
+                    if (!usesCustomization(rCaption, gCaption, bCaption))
+                    {
+                        dwmSetIntValue(DWMAttribute.DWMWA_CAPTION_COLOR, -1);
+                    }
 
                     if (wasSelected)
                     {
@@ -331,12 +360,14 @@ public class SettingHandler
             if (newVal)
             {
                 scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/dwm-dark-styles.css").toExternalForm());
-                DWMHandler.dwmSetBooleanValue(DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, true);
+
+                dwmSetBooleanValue(DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, true);
                 return;
             }
 
             scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/dwm-styles.css").toExternalForm());
-            DWMHandler.dwmSetBooleanValue(DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, false);
+
+            dwmSetBooleanValue(DWMAttribute.DWMWA_USE_IMMERSIVE_DARK_MODE, false);
         });
     }
 
@@ -355,10 +386,20 @@ public class SettingHandler
             if (newVal)
             {
                 scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/dark-styles.css").toExternalForm());
+
+                if (!usesCustomization(rCaption, gCaption, bCaption))
+                {
+                    setCaptionColor(Color.rgb(34, 34, 34));
+                }
                 return;
             }
 
             scene.getStylesheets().add(SettingHandler.class.getResource("/assets/ui/css/styles.css").toExternalForm());
+
+            if (!usesCustomization(rCaption, gCaption, bCaption))
+            {
+                setCaptionColor(Color.rgb(230, 230, 250));
+            }
         });
     }
 
@@ -409,13 +450,13 @@ public class SettingHandler
         );
     }
 
-    private static ChangeListener<? super String> createTextFieldChangeListener(TextArea detailArea, TextField textField, String dwmSubStr)
+    private static ChangeListener<? super String> createTextFieldChangeListener(AnchorPane anchorPane, TextArea detailArea, TextField textField, String dwmSubStr)
     {
         return (obs, oldVal, newVal) ->
         {
             if (!newVal.matches("\\d*"))
             {
-                textField.setText(newVal.replaceAll("[^\\d.]", ""));
+                textField.setText(RegExUtils.removeAll(newVal, "[^\\d.]"));
             }
 
             if (newVal.length() > 3)
@@ -435,44 +476,26 @@ public class SettingHandler
 
             writeSettingsFile(detailArea, true, dwmSubStr, textField.getPromptText(), getActualValueAsInt(textField.getText()));
 
-            // TODO: Move this to DWMHandler class
+            List<TextField> textFields = List.of(rCaption, gCaption, bCaption, rText, gText, bText, rBorder, gBorder, bBorder, rFill, gFill, bFill);
 
-            int rCaptionInt = getActualValueAsInt(rCaption.getText());
-            int gCaptionInt = getActualValueAsInt(gCaption.getText());
-            int bCaptionInt = getActualValueAsInt(bCaption.getText());
+            JSONObject root = new JSONObject(readSettings(detailArea));
+            defaultDarkMode = root.getBoolean("default-dark-mode");
 
-            dwmSetIntValue(DWMAttribute.DWMWA_CAPTION_COLOR, -1);
-
-            if (rCaptionInt != -1 && gCaptionInt != -1 && bCaptionInt != -1)
-            {
-                DWMHandler.setCaptionColor(Color.rgb(rCaptionInt, gCaptionInt, bCaptionInt));
-            }
-
-            int rTextInt = getActualValueAsInt(rText.getText());
-            int gTextInt = getActualValueAsInt(gText.getText());
-            int bTextInt = getActualValueAsInt(bText.getText());
-
-            dwmSetIntValue(DWMAttribute.DWMWA_TEXT_COLOR, -1);
-
-            if (rTextInt != -1 && gTextInt != -1 && bTextInt != -1)
-            {
-                DWMHandler.setTextColor(Color.rgb(rTextInt, gTextInt, bTextInt));
-            }
-
-            int rBorderInt = getActualValueAsInt(rBorder.getText());
-            int gBorderInt = getActualValueAsInt(gBorder.getText());
-            int bBorderInt = getActualValueAsInt(bBorder.getText());
-
-            dwmSetIntValue(DWMAttribute.DWMWA_BORDER_COLOR, -1);
-
-            if (rBorderInt != -1 && gBorderInt != -1 && bBorderInt != -1)
-            {
-                DWMHandler.setBorderColor(Color.rgb(rBorderInt, gBorderInt, bBorderInt));
-            }
+            handleStyle(anchorPane, textFields, defaultDarkMode);
         };
     }
 
-    public static String readSettings(TextArea detailArea)
+    public static int getActualValueAsInt(String val)
+    {
+        return val == null || val.isEmpty() ? -1 : Integer.parseInt(val);
+    }
+
+    private static String getActualValue(int val)
+    {
+        return val == -1 ? null : String.valueOf(val);
+    }
+
+    private static String readSettings(TextArea detailArea)
     {
         try
         {
@@ -570,15 +593,5 @@ public class SettingHandler
             invalidAction(detailArea, ExceptionUtils.getStackTrace(e));
             sendErrorPushNotification(detailArea, e);
         }
-    }
-
-    private static String getActualValue(int val)
-    {
-        return val == -1 ? null : String.valueOf(val);
-    }
-
-    private static int getActualValueAsInt(String val)
-    {
-        return val == null || val.isEmpty() ? -1 : Integer.parseInt(val);
     }
 }

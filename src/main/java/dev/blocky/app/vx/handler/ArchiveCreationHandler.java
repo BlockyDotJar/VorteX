@@ -360,7 +360,7 @@ public class ArchiveCreationHandler
                     }
                 }
 
-                String text = "Successfully archived " + fileCount + " files and " + directoryCount + " directories to " + saveToFile.getName() + " in '" + saveToFile.getParent() + "'.";
+                String text = String.format("Successfully archived %d files and %d directories to %s in '%s'.", fileCount, directoryCount, saveToFile.getName(), saveToFile.getParent());
 
                 validAction(detailArea, text);
 
