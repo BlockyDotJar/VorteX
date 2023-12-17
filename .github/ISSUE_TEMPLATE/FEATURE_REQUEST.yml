@@ -4,7 +4,7 @@ body:
     - type: markdown
       attributes:
           value: |-
-              Please join the [discord server](https://discord.gg/FnGFbzCw2r) for questions or ask them in [our discussions](https://github.com/BlockyDotJar/VorteX/discussions).
+              Please join the [Discord server](https://discord.gg/FnGFbzCw2r) for questions or ask them in [our discussions](https://github.com/BlockyDotJar/VorteX/discussions).
               
               Keep in mind that this isn't the place to learn Java.  
               Please head over to [StackOverflow](https://stackoverflow.com/questions/tagged/java) for your general programming questions.
