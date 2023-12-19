@@ -51,6 +51,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -271,18 +272,27 @@ public class BarcodeCreationHandler
                             return;
                         }
 
+                        if (!Files.isWritable(file.getParentFile().toPath()))
+                        {
+                            String caption = "Error while trying to write to file.";
+                            String text = "You don't have permission to write to " + file.getParentFile().getName() + ". Try saving the file at a subdirectory of your user directory or run VorteX with administrator privileges.";
+
+                            sendPushNotification(detailArea, null, TrayIcon.MessageType.ERROR, caption, text);
+                            return;
+                        }
+
                         validAction(detailArea, "File '" + file.getName() + "' will be created in directory " + file.getParent());
                         validAction(detailArea, "Creation started...");
 
                         String widthText = width.getText();
                         String heightText = height.getText();
 
-                        int iWidth = widthText.isBlank() ? 300 : Integer.parseInt(widthText);
-                        int iHeight = heightText.isBlank() ? 150 : Integer.parseInt(heightText);
+                        int iWidth = widthText == null || widthText.isBlank() ? 300 : Integer.parseInt(widthText);
+                        int iHeight = widthText == null || heightText.isBlank() ? 150 : Integer.parseInt(heightText);
 
                         Image resizedBarcodeImage = imageView.getImage();
 
-                        if (!widthText.isBlank() || !heightText.isBlank())
+                        if ((widthText != null && !widthText.isBlank()) || (heightText != null && !heightText.isBlank()))
                         {
                             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                             ImageIO.write(barcode, FilenameUtils.getExtension(file.getName()), outputStream);
@@ -333,12 +343,12 @@ public class BarcodeCreationHandler
                         String widthText = width.getText();
                         String heightText = height.getText();
 
-                        int iWidth = widthText.isBlank() ? 300 : Integer.parseInt(widthText);
-                        int iHeight = heightText.isBlank() ? 150 : Integer.parseInt(heightText);
+                        int iWidth = widthText == null || widthText.isBlank() ? 300 : Integer.parseInt(widthText);
+                        int iHeight = heightText == null || heightText.isBlank() ? 150 : Integer.parseInt(heightText);
 
                         Image resizedBarcodeImage = imageView.getImage();
 
-                        if (!widthText.isBlank() || !heightText.isBlank())
+                        if ((widthText != null && !widthText.isBlank()) || (heightText != null && !heightText.isBlank()))
                         {
                             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                             ImageIO.write(barcode, "jpg", outputStream);

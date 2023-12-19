@@ -39,13 +39,16 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
 import static dev.blocky.app.vx.handler.ActionHandler.*;
 import static dev.blocky.app.vx.handler.BarcodeCreationHandler.initBarcodeFormat;
 import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendPushNotification;
 
 public class BarcodeReadingHandler
 {
@@ -130,6 +133,15 @@ public class BarcodeReadingHandler
                     case UPC_E -> odcr = new UPCEReader();
                     case RSS_14 -> odcr = new RSS14Reader();
                     case RSS_EXPANDED -> odcr = new RSSExpandedReader();
+                }
+
+                if (!Files.isReadable(file.toPath()))
+                {
+                    String caption = "Error while trying to read a file.";
+                    String text = "You don't have permission to read the content of " + file.getName() + ". Try running VorteX with administrator privileges or reinstall VorteX at %APPDATA%.";
+
+                    sendPushNotification(detailArea, null, TrayIcon.MessageType.ERROR, caption, text);
+                    return;
                 }
 
                 BufferedImage barcode = ImageIO.read(file);

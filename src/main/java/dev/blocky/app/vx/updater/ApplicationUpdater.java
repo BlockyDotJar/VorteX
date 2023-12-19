@@ -49,23 +49,22 @@ public class ApplicationUpdater
 
     private static boolean isOlderVersion(String currentVersion, String latestVersion)
     {
-        Comparator<String> versionComparator = Comparator
-                .comparing(s -> s, (cv, lv) ->
+        Comparator<String> versionComparator = Comparator.comparing(s -> s, (cv, lv) ->
+        {
+            String[] cvArr = cv.split("\\.");
+            String[] lvArr = lv.split("\\.");
+
+            for (int i = 0; i < Math.min(cvArr.length, lvArr.length); i++)
+            {
+                int cmp = Integer.compare(Integer.parseInt(cvArr[i]), Integer.parseInt(lvArr[i]));
+
+                if (cmp != 0)
                 {
-                    String[] cvArr = cv.split("\\.");
-                    String[] lvArr = lv.split("\\.");
-
-                    for (int i = 0; i < Math.min(cvArr.length, lvArr.length); i++)
-                    {
-                        int cmp = Integer.compare(Integer.parseInt(cvArr[i]), Integer.parseInt(lvArr[i]));
-
-                        if (cmp != 0)
-                        {
-                            return cmp;
-                        }
-                    }
-                    return Integer.compare(cvArr.length, lvArr.length);
-                });
+                    return cmp;
+                }
+            }
+            return Integer.compare(cvArr.length, lvArr.length);
+        });
 
         return versionComparator.compare(currentVersion, latestVersion) >= 0;
     }
@@ -163,11 +162,6 @@ public class ApplicationUpdater
         {
             String downloadUrl = versionData.get(1);
 
-            if (!downloadUrl.matches("^ht{2}ps://github[.]com/BlockyDotJar/VorteX/releases/download/v\\d+[.]\\d+[.]\\d+/VorteX-Setup-\\d+[.]\\d+[.]\\d+[.]exe"))
-            {
-                return null;
-            }
-
             String vortexHome = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\VorteX", "VorteX_HOME");
 
             if (vortexHome == null)
@@ -206,15 +200,12 @@ public class ApplicationUpdater
 
     private static void startDownloadTask(HostServices hostServices, NodeCreator creator, TextArea detailArea, List<String> versionDetails)
     {
-        final File[] installer = {null};
-
-        Task<Void> backgroundTask = new Task<>()
+        Task<File> backgroundTask = new Task<>()
         {
             @Override
-            protected Void call()
+            protected File call()
             {
-                installer[0] = downloadAndInstallFile(detailArea, versionDetails);
-                return null;
+                return downloadAndInstallFile(detailArea, versionDetails);
             }
         };
 
@@ -229,7 +220,7 @@ public class ApplicationUpdater
 
                     closeAlert.showAndWait();
 
-                    hostServices.showDocument(installer[0].getAbsolutePath());
+                    hostServices.showDocument(backgroundTask.getValue().getAbsolutePath());
 
                     System.exit(0);
                 })

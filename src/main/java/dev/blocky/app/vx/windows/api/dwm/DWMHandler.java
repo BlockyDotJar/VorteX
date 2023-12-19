@@ -137,8 +137,9 @@ public class DWMHandler
         }
     }
 
-    public static void handleStyleSettings(AnchorPane anchorPane, JSONObject dwm)
+    public static void handleStyleSettings(AnchorPane anchorPane, JSONObject root)
     {
+        JSONObject dwm = root.getJSONObject("dwm");
         JSONObject caption = dwm.getJSONObject("caption");
 
         int rCaptionInt = caption.getInt("r");
@@ -172,7 +173,7 @@ public class DWMHandler
             setBorderColor(Color.rgb(rBorderInt, gBorderInt, bBorderInt));
         }
 
-        JSONObject fill = dwm.getJSONObject("fill");
+        JSONObject fill = root.getJSONObject("window-fill");
 
         int rFillInt = fill.getInt("r");
         int gFillInt = fill.getInt("g");
@@ -186,20 +187,28 @@ public class DWMHandler
         }
     }
 
-    public static void handleStyle(AnchorPane anchorPane, List<TextField> textFields, boolean defaultDarkMode)
+    public static void handleStyle(AnchorPane anchorPane, List<TextField> textFields, boolean defaultDarkMode, boolean usesMica)
     {
         int rCaptionInt = getActualValueAsInt(textFields.get(0).getText());
         int gCaptionInt = getActualValueAsInt(textFields.get(1).getText());
         int bCaptionInt = getActualValueAsInt(textFields.get(2).getText());
 
-        if (defaultDarkMode)
+        if (usesMica)
         {
-            setCaptionColor(Color.rgb(34, 34, 34));
+            dwmSetIntValue(DWMAttribute.DWMWA_CAPTION_COLOR, -1);
         }
 
-        if (!defaultDarkMode)
+        if (!usesMica)
         {
-            setCaptionColor(Color.rgb(230, 230, 250));
+            if (defaultDarkMode)
+            {
+                setCaptionColor(Color.rgb(34, 34, 34));
+            }
+
+            if (!defaultDarkMode)
+            {
+                setCaptionColor(Color.rgb(230, 230, 250));
+            }
         }
 
         if (rCaptionInt != -1 && gCaptionInt != -1 && bCaptionInt != -1)

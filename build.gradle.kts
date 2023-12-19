@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "dev.blocky.app.vx"
-version = "1.0.0"
+version = "1.0.1"
 description = "General utility program written in Java."
 
 repositories {

@@ -1,6 +1,6 @@
 [Setup]
 AppName=VorteX Wizard
-AppVersion=1.0.0
+AppVersion=1.0.1
 AppVerName=VorteX Wizard {#SetupSetting('AppVersion')}
 DefaultDirName={commonpf32}\VorteX
 DefaultGroupName=VorteX

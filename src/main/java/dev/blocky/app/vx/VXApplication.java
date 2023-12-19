@@ -27,6 +27,9 @@ import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.geometry.Side;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
@@ -41,6 +44,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.controlsfx.control.HiddenSidesPane;
 import org.json.JSONObject;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -58,6 +62,7 @@ import static dev.blocky.app.vx.handler.BarcodeCreationHandler.initCreateBarcode
 import static dev.blocky.app.vx.handler.BarcodeReadingHandler.initReadBarcode;
 import static dev.blocky.app.vx.handler.SettingHandler.initSettings;
 import static dev.blocky.app.vx.handler.SettingHandler.updateCheck;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendPushNotification;
 import static dev.blocky.app.vx.updater.ApplicationUpdater.initApplicationUpdater;
 
 public class VXApplication extends Application
@@ -134,7 +139,7 @@ public class VXApplication extends Application
         {
             File file = new File(args[0]);
 
-            if (!file.exists() || !file.isFile() || file.isDirectory() || !FilenameUtils.getExtension(file.getName()).equals("vxar"))
+            if (!file.exists() || !file.isFile() || file.isDirectory() || Files.isReadable(file.toPath()) || !FilenameUtils.getExtension(file.getName()).equals("vxar"))
             {
                 String title = "Error while opening VorteX...";
                 String headerText = "Unknown error detected...";
@@ -146,11 +151,12 @@ public class VXApplication extends Application
                                 > file.exists = %b
                                 > file.isFile = %b
                                 > file.isDirectory = %b
+                                > file.isReadable = %b
                                 > file.isVorteXArchive = %b
                                     
                                 VorteX will be closed after button interaction...
                                 """,
-                        file.exists(), file.isFile(), file.isDirectory(), FilenameUtils.getExtension(file.getName()).equals("vxar")
+                        file.exists(), file.isFile(), file.isDirectory(), Files.isReadable(file.toPath()), FilenameUtils.getExtension(file.getName()).equals("vxar")
                 );
 
                 Alert closeAlert = creator.createAlert(Alert.AlertType.ERROR, title, headerText, contentText);
@@ -181,6 +187,25 @@ public class VXApplication extends Application
 
         String vortexHome = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\VorteX", "VorteX_HOME");
         File settingsFile = new File(vortexHome + "\\settings.json");
+
+        if (!Files.isReadable(settingsFile.toPath()))
+        {
+            String caption = "Error while trying to read a file.";
+            String text = "You don't have permission to read the content of " + settingsFile.getName() + ". Try running VorteX with administrator privileges or reinstall VorteX at %APPDATA%.";
+
+            sendPushNotification(detailArea, null, TrayIcon.MessageType.ERROR, caption, text);
+
+            String title = "Error while opening VorteX...";
+            String headerText = "File reading error detected...";
+            String contentText = "Settings JSON file might be damaged, try reinstalling VorteX from scratch.";
+
+            Alert closeAlert = creator.createAlert(Alert.AlertType.ERROR, title, headerText, contentText);
+            closeAlert.showAndWait();
+
+            System.exit(0);
+            return;
+        }
+
         String jsonInput = Files.readString(settingsFile.toPath());
 
         String cssFilename = "styles";
@@ -258,7 +283,7 @@ public class VXApplication extends Application
                     DWMHandler.setMicaStyle(dwma, immersiveDarkMode);
                 }
 
-                DWMHandler.handleStyleSettings(anchorPane, dwm);
+                DWMHandler.handleStyleSettings(anchorPane, root);
             }
 
             ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();

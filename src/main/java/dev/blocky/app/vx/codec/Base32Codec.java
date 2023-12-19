@@ -25,6 +25,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.HashSet;
 
 public class Base32Codec
@@ -80,11 +81,10 @@ public class Base32Codec
                     String realPath = decodedPath.toString().replace("/", "\\");
                     file = new File(destinationPath + "\\" + realPath);
 
-                    if (!file.exists())
+                    if (!file.exists() && Files.isWritable(file.getParentFile().toPath()))
                     {
                         file.mkdirs();
                     }
-
                     continue;
                 }
 
@@ -95,9 +95,10 @@ public class Base32Codec
             }
 
             String realPath = decodedPath.toString().replace("/", "\\");
+
             File file = new File(destinationPath + "\\" + realPath);
 
-            if (!file.exists())
+            if (!file.exists() && Files.isWritable(file.toPath()))
             {
                 zipFile.extractFile(fileHeader, destinationPath, decodedPath.toString());
             }

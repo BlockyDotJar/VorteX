@@ -41,6 +41,8 @@ public class TrayIconHandler
 
                 TrayIcon trayIcon = new TrayIcon(image);
                 trayIcon.setImageAutoSize(true);
+
+                // TODO: Fix not executing action listener.
                 trayIcon.addActionListener(actionListener);
 
                 tray.add(trayIcon);

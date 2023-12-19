@@ -29,6 +29,10 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import org.apache.commons.lang3.RegExUtils;
@@ -38,6 +42,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.controlsfx.control.ToggleSwitch;
 import org.json.JSONObject;
 
+import java.awt.*;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
@@ -45,6 +50,7 @@ import java.util.List;
 import static dev.blocky.app.vx.handler.ActionHandler.invalidAction;
 import static dev.blocky.app.vx.handler.ActionHandler.lastUsedButton;
 import static dev.blocky.app.vx.handler.TrayIconHandler.sendErrorPushNotification;
+import static dev.blocky.app.vx.handler.TrayIconHandler.sendPushNotification;
 import static dev.blocky.app.vx.updater.ApplicationUpdater.initApplicationUpdater;
 import static dev.blocky.app.vx.windows.api.dwm.DWMHandler.*;
 import static java.nio.file.Files.writeString;
@@ -114,9 +120,9 @@ public class SettingHandler
             gCaption = creator.createTextField("g", getActualValue(gCaptionInt), 80, 150, 50, true, true, validVersion, !validVersion);
             bCaption = creator.createTextField("b", getActualValue(bCaptionInt), 150, 150, 50, true, true, validVersion, !validVersion);
 
-            rCaption.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rCaption, "caption"));
-            gCaption.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gCaption, "caption"));
-            bCaption.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bCaption, "caption"));
+            rCaption.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rCaption, true, "caption"));
+            gCaption.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gCaption, true, "caption"));
+            bCaption.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bCaption, true, "caption"));
 
             Label textLabel = creator.createLabel("Color for titlebar text", 250, 120);
 
@@ -130,9 +136,9 @@ public class SettingHandler
             gText = creator.createTextField("g", getActualValue(gTextInt), 320, 150, 50, true, true, validVersion, !validVersion);
             bText = creator.createTextField("b", getActualValue(bTextInt), 390, 150, 50, true, true, validVersion, !validVersion);
 
-            rText.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rText, "text"));
-            gText.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gText, "text"));
-            bText.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bText, "text"));
+            rText.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rText, true, "text"));
+            gText.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gText, true, "text"));
+            bText.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bText, true, "text"));
 
             Label borderLabel = creator.createLabel("Color for window border", 10, 200);
 
@@ -146,13 +152,13 @@ public class SettingHandler
             gBorder = creator.createTextField("g", getActualValue(gBorderInt), 80, 230, 50, true, true, validVersion, !validVersion);
             bBorder = creator.createTextField("b", getActualValue(bBorderInt), 150, 230, 50, true, true, validVersion, !validVersion);
 
-            rBorder.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rBorder, "border"));
-            gBorder.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gBorder, "border"));
-            bBorder.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bBorder, "border"));
+            rBorder.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rBorder, true, "border"));
+            gBorder.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gBorder, true, "border"));
+            bBorder.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bBorder, true, "border"));
 
             Label fillLabel = creator.createLabel("Color for window fill", 250, 200);
 
-            JSONObject fill = dwm.getJSONObject("fill");
+            JSONObject fill = root.getJSONObject("window-fill");
 
             int rFillInt = fill.getInt("r");
             int gFillInt = fill.getInt("g");
@@ -162,9 +168,9 @@ public class SettingHandler
             gFill = creator.createTextField("g", getActualValue(gFillInt), 320, 230, 50, true, true, true, false);
             bFill = creator.createTextField("b", getActualValue(bFillInt), 390, 230, 50, true, true, true, false);
 
-            rFill.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rFill, "fill"));
-            gFill.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gFill, "fill"));
-            bFill.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bFill, "fill"));
+            rFill.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, rFill, false, "window-fill"));
+            gFill.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, gFill, false, "window-fill"));
+            bFill.textProperty().addListener(createTextFieldChangeListener(anchorPane, detailArea, bFill, false, "window-fill"));
 
             updateCheck = root.getBoolean("update-check");
             pushNotifications = root.getBoolean("push-notifications");
@@ -450,7 +456,7 @@ public class SettingHandler
         );
     }
 
-    private static ChangeListener<? super String> createTextFieldChangeListener(AnchorPane anchorPane, TextArea detailArea, TextField textField, String dwmSubStr)
+    private static ChangeListener<? super String> createTextFieldChangeListener(AnchorPane anchorPane, TextArea detailArea, TextField textField, boolean writeToDWMObject, String jsonStr)
     {
         return (obs, oldVal, newVal) ->
         {
@@ -474,14 +480,14 @@ public class SettingHandler
                 }
             }
 
-            writeSettingsFile(detailArea, true, dwmSubStr, textField.getPromptText(), getActualValueAsInt(textField.getText()));
+            writeSettingsFile(detailArea, writeToDWMObject, jsonStr, textField.getPromptText(), getActualValueAsInt(textField.getText()));
 
             List<TextField> textFields = List.of(rCaption, gCaption, bCaption, rText, gText, bText, rBorder, gBorder, bBorder, rFill, gFill, bFill);
 
             JSONObject root = new JSONObject(readSettings(detailArea));
             defaultDarkMode = root.getBoolean("default-dark-mode");
 
-            handleStyle(anchorPane, textFields, defaultDarkMode);
+            handleStyle(anchorPane, textFields, defaultDarkMode, dwma.value == 2 || dwma.value == 4);
         };
     }
 
@@ -501,6 +507,16 @@ public class SettingHandler
         {
             String vortexHome = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\VorteX", "VorteX_HOME");
             File settingsFile = new File(vortexHome + "\\settings.json");
+
+            if (!Files.isReadable(settingsFile.toPath()))
+            {
+                String caption = "Error while trying to read a file.";
+                String text = "You don't have permission to read the content of " + settingsFile.getName() + ". Try running VorteX with administrator privileges or reinstall VorteX at %APPDATA%.";
+
+                sendPushNotification(detailArea, null, TrayIcon.MessageType.ERROR, caption, text);
+                return null;
+            }
+
             return Files.readString(settingsFile.toPath());
         }
         catch (Exception e)
@@ -517,6 +533,15 @@ public class SettingHandler
         {
             String vortexHome = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\VorteX", "VorteX_HOME");
             File settingsFile = new File(vortexHome + "\\settings.json");
+
+            if (!Files.isWritable(settingsFile.toPath()))
+            {
+                String caption = "Error while trying to write to file.";
+                String text = "You don't have permission to write to " + settingsFile.getName() + ". Try running VorteX with administrator privileges or reinstall VorteX at %APPDATA%.";
+
+                sendPushNotification(detailArea, null, TrayIcon.MessageType.ERROR, caption, text);
+                return;
+            }
 
             JSONObject root = new JSONObject(readSettings(detailArea));
 
@@ -554,6 +579,16 @@ public class SettingHandler
         {
             String vortexHome = Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\VorteX", "VorteX_HOME");
             File settingsFile = new File(vortexHome + "\\settings.json");
+
+            if (!Files.isWritable(settingsFile.toPath()))
+            {
+                String caption = "Error while trying to write to file.";
+                String text = "You don't have permission to write to " + settingsFile.getName() + ". Try running VorteX with administrator privileges or reinstall VorteX at %APPDATA%.";
+
+                sendPushNotification(detailArea, null, TrayIcon.MessageType.ERROR, caption, text);
+                return;
+            }
+
             String jsonStr = Files.readString(settingsFile.toPath());
 
             JSONObject root = new JSONObject(jsonStr);
